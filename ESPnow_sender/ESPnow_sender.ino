@@ -1,8 +1,9 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
-// REPLACE WITH YOUR RECEIVER MAC Address
-uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+// REPLACE WITH YOUR RECEIVER MAC Address 9C:9C:1F:EA:D4:B0  9C:9C:1F:EA:D4:B0
+
+uint8_t broadcastAddress[] = {0x9C, 0x9C, 0x1F, 0xEA, 0xD4, 0xB0};
 
 // Structure example to send data
 // Must match the receiver structure
@@ -65,6 +66,16 @@ void loop() {
 
 
   // Send message via ESP-NOW
+  myData.b1=random();
+  myData.b2=random();
+  myData.b3=random();
+  myData.b4=random();
+  myData.b5=random();
+  myData.b6=random();
+  myData.b7=random();
+  myData.b8=random();
+  myData.b9=random();
+  
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
    
   if (result == ESP_OK) {

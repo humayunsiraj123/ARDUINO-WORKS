@@ -20,7 +20,7 @@ int b9;
 int b10;
 int line_no;
 } struct_message;
-
+//
 
 // Create a struct_message called myData
 struct_message myData,rcv_data;
@@ -29,18 +29,17 @@ struct_message myData,rcv_data;
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
   Serial.print("Bytes received: ");
-  Serial.println(len);
- rcv_data.b1 =  mydata.b1;
- rcv_data.b2 =  mydata.b2;
- rcv_data.b3 =  mydata.b3;
- rcv_data.b4 =  mydata.b4;
- rcv_data.b5 =  mydata.b5;
- rcv_data.b6 =  mydata.b6;
- rcv_data.b7 =  mydata.b7;
- rcv_data.b8 =  mydata.b8;
- rcv_data.b9 =  mydata.b9;
- rcv_data.b10  = mydata.b10;
-rcv_data.line_no = mydata.line_no;
+  Serial.println(len); rcv_data.b1 =  myData.b1;
+ rcv_data.b2 =  myData.b2;
+ rcv_data.b3 =  myData.b3;
+ rcv_data.b4 =  myData.b4;
+ rcv_data.b5 =  myData.b5;
+ rcv_data.b6 =  myData.b6;
+ rcv_data.b7 =  myData.b7;
+ rcv_data.b8 =  myData.b8;
+ rcv_data.b9 =  myData.b9;
+ rcv_data.b10  = myData.b10;
+rcv_data.line_no = myData.line_no;
 }
  
 void setup() {
@@ -51,7 +50,7 @@ void setup() {
   WiFi.mode(WIFI_STA);
 
   // Init ESP-NOW
-  if (esp_now_init() ! =  ESP_OK) {
+  if (esp_now_init() !=  ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
   lcd.init();                      // initialize the lcd 
@@ -75,5 +74,28 @@ void setup() {
 }
 
 void loop() {
+
+Serial.println("recv data bit 1 ");
+Serial.println(myData.b1);
+Serial.println("recv data bit2 ");
+Serial.println(myData.b2);
+Serial.println("recv data bit3");
+Serial.println(myData.b3);
+
+Serial.println("recv data bit4");
+Serial.println(myData.b3);
+Serial.println("recv data bit5");
+Serial.println(myData.b4);
+Serial.println("recv data bit6");
+Serial.println(myData.b5);
+Serial.println("recv data bit7");
+Serial.println("recv data bit8");
+Serial.println(myData.b6);
+Serial.println("recv data bit9");
+Serial.println(myData.b7);
+Serial.println("recv data bit10");
+Serial.println(myData.b8);
+Serial.println("recv data bit x");
+delay(2000);
 
 }
