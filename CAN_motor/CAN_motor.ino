@@ -7,7 +7,7 @@ const int ENA_PIN = 5;   // Enable pin
 const int IN1_PIN = 2;  // Input 1 pin
 const int IN2_PIN = 3;  // Input 2 pin
 uint16_t state_command = 0x9D; //temp and pahse current read;
-uint32_t send_com =0x114;
+uint32_t send_com =0x141;
 bool dir =0;
 long unsigned int rcv_com ;//=0x214;
 byte id_ex[7] ={0x30,0x60,0x61,0x9A,0x71,0x70,0x92};//
@@ -56,12 +56,94 @@ void setup() {
   pinMode(IN2_PIN, OUTPUT);
   
   // put your setup code here, to run once:
-if (CAN0.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ) == CAN_OK) Serial.println("MCP2515 Initialized Successfully!");
+if (CAN0.begin(MCP_ANY, CAN_1000KBPS, MCP_8MHZ) == CAN_OK) Serial.println("MCP2515 Initialized Successfully!");
   else Serial.println("Error Initializing MCP2515...");
 
   CAN0.setMode(MCP_NORMAL);
-SetBaudRate(0xB4,0x00);  
+SetBaudRate(0x141,0x01);  //1000mpbs 
+delay(100);
+Brake(0x141,0);//0 for break relase;
 }
+
+
+
+void speed_cntrl(uint16_t canid, int cntrl,uint8_t value=0)
+{
+
+if(cntrl ==1){
+  int32_t speedControl = 10000;
+  uint8_t txBuf[8] = {0xA2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, baudrate};
+txBuf[4]=speedControl;
+txBuf[5]=speedControl>>8;
+txBuf[6]=speedControl>>16;
+txBuf[8]=speedControl>>24;
+}
+if(cntrl ==0){
+  int32_t speedControl = -10000;
+  uint8_t txBuf[8] = {0xA2, 0x00, 0x00, 0x00, 0xF0, 0xD8, 0xFF, 0xFF};
+//txBuf[4]=0xF0//OxFO 0xD8 OxFF OxFF
+//txBuf[5]=speedControl>>8;
+//txBuf[6]=speedControl>>16;
+//txBuf[8]=speedControl>>24;
+}
+
+  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
+
+  if (sndStat == CAN_OK)
+  {
+    Serial.print("Tx ID: 0x");
+    Serial.println(canid, HEX);
+    Serial.print("Baud Rate Set to: ");
+    
+  else
+  {
+    Serial.println("Failed to send baud rate command");
+  }
+
+
+
+   CAN0.readMsgBuf(&rcv_com, &len, rxBuf);
+
+  for (byte i = 0; i < len; i++)
+  {
+    Serial.print("Rx data at index ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(rxBuf[i], HEX);
+  }
+
+  if (rxId == 0x241)
+  {
+    if(rxBuf[0]===0xA2 && rxBuf[0]==0xA2){//
+ 
+    int32_t motorAngle = ((int32_t)rxBuf[7] << 24) | ((int32_t)rxBuf[6] << 16) | ((int32_t)rxBuf[5] << 8) | rxBuf[4];
+    float angleDegrees = motorAngle * 0.01;
+    Serial.print("Motor Output Shaft Angle: ");
+    Serial.print(angleDegrees);
+    Serial.println(" degrees");
+
+    // Perform operations with the motor output shaft angle data here
+  }
+
+  int8_t temperature = rxBuf[1];
+    int16_t torqueCurrent = (rxBuf[3] << 8) |rxBuf.buf[2];
+    int16_t motorSpeed = (rxBuf[5] << 8) | rxBuf.buf[4];
+    int16_t motorAngle = (rxBuf[7] << 8) | rxBuf.buf[6];
+
+    // Print the motor parameters
+    Serial.print("Motor Temperature: ");
+    Serial.println(temperature);
+    Serial.print("Torque Current: ");
+    Serial.print(torqueCurrent);
+    Serial.println(" mA");
+    Serial.print("Motor Speed: ");
+    Serial.print(motorSpeed);
+    Serial.println(" dps");
+    Serial.print("Motor Angle: ");
+    Serial.print(motorAngle);
+    Serial.println(" degrees");
+}
+
 
 void SetBaudRate(uint16_t canid, uint8_t baudrate)
 {
@@ -93,6 +175,29 @@ void SetBaudRate(uint16_t canid, uint8_t baudrate)
   }
 }
 
+void Brake(uint16_t canid,int i)
+{
+  if(i==1)
+  {uint8_t txBuf[8] = {0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  }
+  else if(i==0){
+      {uint8_t txBuf[8] = {0x77, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  }
+  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
+
+  if (sndStat == CAN_OK)
+  {
+    Serial.print("Tx ID: 0x");
+    Serial.println(canid, HEX);
+    Serial.print("Baud Rate Set to: ");
+    
+  }
+  else
+  {
+    Serial.println("Failed to send baud rate command");
+  }
+}
+
 void StopMotor(uint16_t canid)
 {
   uint8_t txBuf[8] = {0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -111,89 +216,89 @@ void StopMotor(uint16_t canid)
   }
 }
 
-void Send(uint16_t canid, uint8_t fbyte){  
-txBuf[0]=fbyte;
-   byte sndStat = CAN0.sendMsgBuf(canid, 1, 8, txBuf);
-   for (int i = 0; i < 8; i++)
-  {
-    Serial.print("the tx value at index ");
-    Serial.print(i);
-    Serial.print(" is ");
-    Serial.println(txBuf[i], HEX);
-  }
-    if (sndStat == CAN_OK) {
-    //Serial.print("Tx ID: ");
-    //Serial.println(canid, HEX);
-  }
-  //delay(500);   // send data per 100ms
-//txBuf[0]=0x00;
-
-
-                    // If CAN0_INT pin is low, read receive buffer
-  
-    CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
+//void Send(uint16_t canid, uint8_t fbyte){  
+//txBuf[0]=fbyte;
+//   byte sndStat = CAN0.sendMsgBuf(canid, 1, 8, txBuf);
+//   for (int i = 0; i < 8; i++)
+//  {
+//    Serial.print("the tx value at index ");
+//    Serial.print(i);
+//    Serial.print(" is ");
+//    Serial.println(txBuf[i], HEX);
+//  }
+//    if (sndStat == CAN_OK) {
+//    //Serial.print("Tx ID: ");
+//    //Serial.println(canid, HEX);
+//  }
+//  //delay(500);   // send data per 100ms
+////txBuf[0]=0x00;
 //
-//    Serial.print("Rx ID: ");
-//    Serial.print((rxId & 0x1FFFFFFFUL), HEX);
-//    Serial.print("  ");
-//    Serial.print(", dlc: ");
-//    Serial.print(len, HEX);
-//    Serial.print(", data: ");
-
-    for (byte i = 0; i < len; i++) {
-      Serial.print(rxBuf[i], HEX);
-      Serial.print(" ");
-    }
-    //Serial.print("\n");
-    //Serial.print(rxId);
-    byte c=0;
-    byte_1=rxBuf[c];
-    byte_2=rxBuf[c+1];
-    byte_3=rxBuf[c+2];
-    byte_4=rxBuf[c+3];
-    byte_5=rxBuf[c+4];
-    byte_6=rxBuf[c+5];
-    byte_7=rxBuf[c+6];
-    byte_8=rxBuf[c+7];
-
-    
-  
-  //Data=rxBuf;
-
-  if(rxId==0x214){
-    
-  //switch(rxBuf[0]):
-  if(rxBuf[0]==0x40){
-     CurrKP =(0.1/255)*rxBuf[2];
-    Serial.print("the value of CurrKp ");
-    Serial.println(CurrKP);
-    
- CurrKI=(0.1/255)*rxBuf[3];
- Serial.print("the value of CurrKI ");
-    Serial.println(CurrKI);
-    
- SpdKP =(0.1/255)*rxBuf[4];
-Serial.print("the value of SPdKp ");
-    Serial.println(SpdKP);
-    
-SpdKI=(0.1/255)*rxBuf[5];
-Serial.print("the value of SPdKi ");
-    Serial.println(SpdKI);
-    
-PosKP = (0.1/255)*rxBuf[6]; 
-Serial.print("the value of posKp ");
-    Serial.println(PosKP);
-    
-PosKI=(0.1/255)*rxBuf[7];
-
- Serial.print("the value of PosKI ");
-    Serial.println(PosKI);
-    
-
-    
-    }
-  }
-  }
+//
+//                    // If CAN0_INT pin is low, read receive buffer
+//  
+//    CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
+////
+////    Serial.print("Rx ID: ");
+////    Serial.print((rxId & 0x1FFFFFFFUL), HEX);
+////    Serial.print("  ");
+////    Serial.print(", dlc: ");
+////    Serial.print(len, HEX);
+////    Serial.print(", data: ");
+//
+//    for (byte i = 0; i < len; i++) {
+//      Serial.print(rxBuf[i], HEX);
+//      Serial.print(" ");
+//    }
+//    //Serial.print("\n");
+//    //Serial.print(rxId);
+//    byte c=0;
+//    byte_1=rxBuf[c];
+//    byte_2=rxBuf[c+1];
+//    byte_3=rxBuf[c+2];
+//    byte_4=rxBuf[c+3];
+//    byte_5=rxBuf[c+4];
+//    byte_6=rxBuf[c+5];
+//    byte_7=rxBuf[c+6];
+//    byte_8=rxBuf[c+7];
+//
+//    
+//  
+//  //Data=rxBuf;
+//
+//  if(rxId==0x214){
+//    
+//  //switch(rxBuf[0]):
+//  if(rxBuf[0]==0x40){
+//     CurrKP =(0.1/255)*rxBuf[2];
+//    Serial.print("the value of CurrKp ");
+//    Serial.println(CurrKP);
+//    
+// CurrKI=(0.1/255)*rxBuf[3];
+// Serial.print("the value of CurrKI ");
+//    Serial.println(CurrKI);
+//    
+// SpdKP =(0.1/255)*rxBuf[4];
+//Serial.print("the value of SPdKp ");
+//    Serial.println(SpdKP);
+//    
+//SpdKI=(0.1/255)*rxBuf[5];
+//Serial.print("the value of SPdKi ");
+//    Serial.println(SpdKI);
+//    
+//PosKP = (0.1/255)*rxBuf[6]; 
+//Serial.print("the value of posKp ");
+//    Serial.println(PosKP);
+//    
+//PosKI=(0.1/255)*rxBuf[7];
+//
+// Serial.print("the value of PosKI ");
+//    Serial.println(PosKI);
+//    
+//
+//    
+//    }
+//  }
+//  }
 
 
   void Send_main(byte canid){
@@ -370,52 +475,52 @@ PosKI=(0.1/255)*Data[7];
 
 
 
-  void Encode_pos(uint16_t canid)
-    {
-  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
-
-  for (int i = 0; i < 8; i++)
-  {
-    Serial.print("the tx value at index ");
-    Serial.print(i);
-    Serial.print(" is ");
-    Serial.println(txBuf[i], HEX);
-  }
-
-  if (sndStat == CAN_OK)
-  {
-    Serial.print("Tx ID: ");
-    Serial.println(canid, HEX);
-  }
-
-  delay(500);
-
-  CAN0.readMsgBuf(&rxId, &len, rxBuf);
-
-  for (byte i = 0; i < len; i++)
-  {
-    Serial.print("Rx data at index ");
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.println(rxBuf[i], HEX);
-  }
-
-  if (rxId == 0x241)
-  { if(rxBuf[0]==0x60){
-    encoderPosition = ((int32_t)rxBuf[7] << 24) | ((int32_t)rxBuf[6] << 16) | ((int32_t)rxBuf[5] << 8) | rxBuf[4];
-    Serial.print("Encoder Position: ");
-    Serial.println(encoderPosition);
-
-  }
-  else if(rxBuf[0]==0x61)
-   {
-    int32_t encoderRaw = ((int32_t)rxBuf[7] << 24) | ((int32_t)rxBuf[6] << 16) | ((int32_t)rxBuf[5] << 8) | rxBuf[4];
-    Serial.print("Encoder Original Position: ");
-    Serial.println(encoderRaw);
-
-  
-  }
-}}
+//  void Encode_pos(uint16_t canid)
+//    {
+//  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
+//
+//  for (int i = 0; i < 8; i++)
+//  {
+//    Serial.print("the tx value at index ");
+//    Serial.print(i);
+//    Serial.print(" is ");
+//    Serial.println(txBuf[i], HEX);
+//  }
+//
+//  if (sndStat == CAN_OK)
+//  {
+//    Serial.print("Tx ID: ");
+//    Serial.println(canid, HEX);
+//  }
+//
+//  delay(500);
+//
+//  CAN0.readMsgBuf(&rxId, &len, rxBuf);
+//
+//  for (byte i = 0; i < len; i++)
+//  {
+//    Serial.print("Rx data at index ");
+//    Serial.print(i);
+//    Serial.print(": ");
+//    Serial.println(rxBuf[i], HEX);
+//  }
+//
+//  if (rxId == 0x241)
+//  { if(rxBuf[0]==0x60){
+//    encoderPosition = ((int32_t)rxBuf[7] << 24) | ((int32_t)rxBuf[6] << 16) | ((int32_t)rxBuf[5] << 8) | rxBuf[4];
+//    Serial.print("Encoder Position: ");
+//    Serial.println(encoderPosition);
+//
+//  }
+//  else if(rxBuf[0]==0x61)
+//   {
+//    int32_t encoderRaw = ((int32_t)rxBuf[7] << 24) | ((int32_t)rxBuf[6] << 16) | ((int32_t)rxBuf[5] << 8) | rxBuf[4];
+//    Serial.print("Encoder Original Position: ");
+//    Serial.println(encoderRaw);
+//
+//  
+//  }
+//}}
 
 void forward(int duty) {
   digitalWrite(IN1_PIN, HIGH);
@@ -438,22 +543,27 @@ void stopMotor() {
 }
 
 void loop() {
+  
+speed_cntrl(0x141,1);//max speed;
   // put your main code here, to run repeatedly:
 //  for(int i=0;i<255;i=i+10){
 //    analogWrite(i)}
 // digitalWrite(input1Pin,1);
-curr=millis();
-curr1=millis();
-if(curr-prev==5){
-  prev=curr;
-  if(dir==0){
-  dir=1;
-  forward(50);}
-  else if(dir==1){
-  dir=0;
-  backward(50);}
-  }
+//curr=millis();
+//curr1=millis();
+//if(curr-prev==5){
+//  prev=curr;
+//  if(dir==0){
+//  dir=1;
+//  forward(50);}
+//  else if(dir==1){
+//  dir=0;
+//  backward(50);}
+//  }
   
+  if(digitalRead(0)){
+    StopMotor(0x141);
+    }
   
    
 
