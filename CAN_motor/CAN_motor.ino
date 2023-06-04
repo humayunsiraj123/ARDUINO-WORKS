@@ -3,9 +3,12 @@
 
 #define CAN0_INT 2      // Set INT to pin 2
 MCP_CAN CAN0(10);     // Set CS to pin 10
-
+const int ENA_PIN = 5;   // Enable pin
+const int IN1_PIN = 2;  // Input 1 pin
+const int IN2_PIN = 3;  // Input 2 pin
 uint16_t state_command = 0x9D; //temp and pahse current read;
 uint32_t send_com =0x114;
+bool dir =0;
 long unsigned int rcv_com ;//=0x214;
 byte id_ex[7] ={0x30,0x60,0x61,0x9A,0x71,0x70,0x92};//
 uint8_t len = 0;
@@ -19,7 +22,7 @@ byte byte_7;
 byte byte_8;
 uint8_t Data[8] ;
 uint8_t rxBuf[8];
-
+int cnt=0;
 uint8_t txBuf[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 long unsigned int rxId;
 
@@ -38,12 +41,20 @@ float SpdKI;
 float PosKP; 
 float PosKI; 
 
+unsigned long int prev;
+unsigned long int curr;
+unsigned long int prev1;
+unsigned long int curr1;
+ 
 
 int32_t encoderPosition;
 
 void setup() {
   Serial.begin(115200);
-
+  pinMode(ENA_PIN, OUTPUT);
+  pinMode(IN1_PIN, OUTPUT);
+  pinMode(IN2_PIN, OUTPUT);
+  
   // put your setup code here, to run once:
 if (CAN0.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ) == CAN_OK) Serial.println("MCP2515 Initialized Successfully!");
   else Serial.println("Error Initializing MCP2515...");
@@ -114,12 +125,12 @@ txBuf[0]=fbyte;
     //Serial.print("Tx ID: ");
     //Serial.println(canid, HEX);
   }
-  delay(500);   // send data per 100ms
+  //delay(500);   // send data per 100ms
 //txBuf[0]=0x00;
 
 
                     // If CAN0_INT pin is low, read receive buffer
-  {
+  
     CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
 //
 //    Serial.print("Rx ID: ");
@@ -182,7 +193,7 @@ PosKI=(0.1/255)*rxBuf[7];
     
     }
   }
-  }}
+  }
 
 
   void Send_main(byte canid){
@@ -213,7 +224,7 @@ byte tx[8];
     Serial.println(canid, HEX);
   }
 
-  delay(500);
+  //delay(500);
 
   CAN0.readMsgBuf(&rcv_com, &len, rxBuf);
 
@@ -406,13 +417,48 @@ PosKI=(0.1/255)*Data[7];
   }
 }}
 
+void forward(int duty) {
+  digitalWrite(IN1_PIN, HIGH);
+  digitalWrite(IN2_PIN, LOW);
+  analogWrite(ENA_PIN, (2.5*duty));  // Set the speed (0-255)
+}
 
+// Functioto run the motor in counter-clockwise direction
+void backward(int duty) {
+  digitalWrite(IN1_PIN, LOW);
+  digitalWrite(IN2_PIN, HIGH);
+  analogWrite(ENA_PIN, (2.5*duty));  // Set the speed (0-255)
+}
+
+// Function to stop the motor
+void stopMotor() {
+  digitalWrite(IN1_PIN, LOW);
+  digitalWrite(IN2_PIN, LOW);
+  analogWrite(ENA_PIN, 0);  // Set the speed to 0
+}
 
 void loop() {
   // put your main code here, to run repeatedly:
-  for(int i =0 ;i<7;i++){
-    Send_main(id_ex[i]);
-    delay(2000);
+//  for(int i=0;i<255;i=i+10){
+//    analogWrite(i)}
+// digitalWrite(input1Pin,1);
+curr=millis();
+curr1=millis();
+if(curr-prev==5){
+  prev=curr;
+  if(dir==0){
+  dir=1;
+  forward(50);}
+  else if(dir==1){
+  dir=0;
+  backward(50);}
+  }
+  
+  
    
-    }
-}
+
+if(curr1-prev1==1000){
+  prev1=curr1;
+  cnt=cnt<7?++cnt:0;
+     Send_main(id_ex[cnt]);  
+}}
