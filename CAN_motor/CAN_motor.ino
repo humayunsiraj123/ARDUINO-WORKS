@@ -48,6 +48,58 @@ unsigned long int curr1;
  
 
 int32_t encoderPosition;
+void SetBaudRate(uint16_t canid, uint8_t baudrate)
+{
+  uint8_t txBuf[8] = {0xB4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, baudrate};
+
+  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
+
+  if (sndStat == CAN_OK)
+  {
+    Serial.print("Tx ID: 0x");
+    Serial.println(canid, HEX);
+    Serial.print("Baud Rate Set to: ");
+    if (baudrate == 0)
+    {
+      Serial.println("500 Kbps");
+    }
+    else if (baudrate == 1)
+    {
+      Serial.println("1 Mbps");
+    }
+    else
+    {
+      Serial.println("Invalid baud rate");
+    }
+  }
+  else
+  {
+    Serial.println("Failed to send baud rate command");
+  }
+}
+
+void Brake(uint16_t canid,int i)
+{
+  if(i==1)
+  {uint8_t txBuf[8] = {0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  }
+  else if(i==0){
+      {uint8_t txBuf[8] = {0x77, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  }
+  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
+
+  if (sndStat == CAN_OK)
+  {
+    Serial.print("Tx ID: 0x");
+    Serial.println(canid, HEX);
+    Serial.print("Baud Rate Set to: ");
+    
+  }
+  else
+  {
+    Serial.println("Failed to send baud rate command");
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -64,6 +116,7 @@ SetBaudRate(0x141,0x01);  //1000mpbs
 delay(100);
 Brake(0x141,0);//0 for break relase;
 }
+
 
 
 
@@ -145,58 +198,7 @@ if(cntrl ==0){
 }
 
 
-void SetBaudRate(uint16_t canid, uint8_t baudrate)
-{
-  uint8_t txBuf[8] = {0xB4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, baudrate};
 
-  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
-
-  if (sndStat == CAN_OK)
-  {
-    Serial.print("Tx ID: 0x");
-    Serial.println(canid, HEX);
-    Serial.print("Baud Rate Set to: ");
-    if (baudrate == 0)
-    {
-      Serial.println("500 Kbps");
-    }
-    else if (baudrate == 1)
-    {
-      Serial.println("1 Mbps");
-    }
-    else
-    {
-      Serial.println("Invalid baud rate");
-    }
-  }
-  else
-  {
-    Serial.println("Failed to send baud rate command");
-  }
-}
-
-void Brake(uint16_t canid,int i)
-{
-  if(i==1)
-  {uint8_t txBuf[8] = {0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  }
-  else if(i==0){
-      {uint8_t txBuf[8] = {0x77, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  }
-  byte sndStat = CAN0.sendMsgBuf(canid, 0, 8, txBuf);
-
-  if (sndStat == CAN_OK)
-  {
-    Serial.print("Tx ID: 0x");
-    Serial.println(canid, HEX);
-    Serial.print("Baud Rate Set to: ");
-    
-  }
-  else
-  {
-    Serial.println("Failed to send baud rate command");
-  }
-}
 
 void StopMotor(uint16_t canid)
 {
