@@ -13,9 +13,9 @@ WiFiServer server(80);
 
 
 int water_sensor = 34;
-bool isRaining = false;
+bool isWet = false;
 int pir_sensor =32;
-bool fall =false;
+bool isAwake =false;
 
 // Variable to store the HTTP request
 String header;
@@ -24,7 +24,7 @@ String header;
 String output26State = "off";
 
 // Assign output variables to GPIO pins
-const int output26 = 26;
+const int output26 = 26;//buzer pin
 String wet_state ="off";
 
 // Current time
@@ -45,6 +45,7 @@ void setup() {
  // pinMode(output27, OUTPUT);
   pinMode(water_sensor, INPUT);
   pinMode(pir_sensor, INPUT);
+  pinMode(LED_BUILTIN,OUTPUT);
   
 
   // Connect to Wi-Fi network with SSID and password
@@ -64,24 +65,32 @@ void setup() {
 }
 String text;
 unsigned long prev_time=0;
+unsigned long prev_ip_time=0;
+
 void loop() {
   
+  
+  //for debuging only
   if(millis()-prev_time>5000){
     prev_time=millis();
-    isRaining=!isRaining;
-    fall=!fall;
+    isWet=!isWet;
+    isAwake=!isAwake;
     Serial.print("satte::::");
-    Serial.println(isRaining);
+    Serial.println(isWet);
     Serial.print("fall::::");
-   Serial.println(fall);
+   Serial.println(isAwake);
     }
-
-    //isRaining=digitalRead(water_sensor);
-    //fall=digitalRead(pir_sensor);
     
-    
-
- 
+//  if(millis()-prev_time>5000){
+//    prev_time=millis();
+//    isWet=digitalRead(water_sensor);
+//    fall =digitalRead(pir_sensor);
+//   // fall=!fall;
+//    Serial.print("wetstate");
+//    Serial.println(isWet);
+//    Serial.print("Pir ");
+//   Serial.println(fall);
+//    }
 //  else{
 //  isRaining =0;
 //    Serial.println("DRYyyyyyyyy");
@@ -114,17 +123,19 @@ void loop() {
 
             // turns the GPIOs on and off
 
-            if(fall){
+            if(isAwake){
               if(header.indexOf("GET /26/off") >= 0){
-                Serial.println("BUZZER DISABLE");
+                Serial.println("BUZZER OFF");
                 output26State = "off";
                 digitalWrite(LED_BUILTIN, 0);
-                
+               digitalWrite(output26, 0);
+               
                 }
               else{
-              Serial.println("BUZZER DISABLE");
+              Serial.println("BUZZER HIGH");
                 output26State = "on";
                 digitalWrite(LED_BUILTIN, 1);
+               digitalWrite(output26, 1);
                 
                 }
               
@@ -173,57 +184,44 @@ void loop() {
             
             // Display rain sensor block
             client.print("<div class=\"block ");
-            if (isRaining) {
-              client.print("blue\">Urine");
-            }
-            else {
-              client.print("white\">No Urine");
-            }
-            client.println("</div>");
+            if (isWet) {
+    client.print("blue\">URINE DETECTED");
+  } else {
+    client.print("white\">NO URINE DETECTED");
+  }
+  client.println("</div>");
 
              client.print("<div class=\"block ");
-            if (fall) {
-              client.print("red\">DANGER");
-            }
-            else {
-              client.print("green\">RELAX");
-            }
-            client.println("</div>");
+            if (isAwake) {
+    client.print("red\">BABY AWAKE");
+  } else {
+    client.print("green\">BABY SLEEPING");
+  }
+  client.println("</div>");
+
 
 
             // Display current state and ON/OFF buttons for GPIO 26
-            client.println("<p>BUZZER ALERT " + output26State + "</p>");
+            client.println("<p>BUZZER ALERT   " + output26State + "</p>");
             // If the output26State is off, it displays the ON button
-            
-            if (output26State == "on") {
-              //client.println("<p><a href=\"/26/on\"><button class=\"button\">ON</button></a></p>");
-            client.println("<p><a href=\"/26/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-            else {
-            //  client.println("<p><a href=\"/26/off\"><button class=\"button button2\">OFF</button></a></p>");
-            client.println("<p><a href=\"/26/on\"><button class=\"button\">BACK</button></a></p>");
-            
-            }
+//            
+//            if (output26State == "on") {
+//              //client.println("<p><a href=\"/26/on\"><button class=\"button\">ON</button></a></p>");
+//            client.println("<p><a href=\"/26/off\"><button class=\"button button2\">OFF</button></a></p>");
+//            }
+//            else {
+//            //  client.println("<p><a href=\"/26/off\"><button class=\"button button2\">OFF</button></a></p>");
+//            client.println("<p><a href=\"/26/on\"><button class=\"button\">BACK</button></a></p>");
+//            
+//            }
+              if (output26State == "on") {
+    client.println("<p><a href=\"/26/off\"><button class=\"button button2\">TURN OFF BUZZER</button></a></p>");
+  } else {
+    client.println("<p><a href=\"/26/on\"><button class=\"button\">TURN ON BUZZER</button></a></p>");
+  }
 
-//            // Display current state and ON/OFF buttons for GPIO 27
-//            client.println("<p>Door closing - State " + output27State + "</p>");
-//            // If the output27State is off, it displays the ON button
-//            if (output27State == "off") {
-//              client.println("<p><a href=\"/27/on\"><button class=\"button\">ON</button></a></p>");
-//            }
-//            else {
-//              client.println("<p><a href=\"/27/off\"><button class=\"button button2\">OFF</button></a></p>");
-//            }
-//
-//            // Display current state and ON/OFF buttons for GPIO 28
-//            client.println("<p>Valve - State " + output28State + "</p>");
-//            // If the output28State is off, it displays the ON button
-//            if (output28State == "off") {
-//              client.println("<p><a href=\"/28/on\"><button class=\"button\">ON</button></a></p>");
-//            }
-//            else {
-//              client.println("<p><a href=\"/28/off\"><button class=\"button button2\">OFF</button></a></p>");
-//            }
+
+//         
             client.println("</body></html>");
 
             // The HTTP response ends with another blank line

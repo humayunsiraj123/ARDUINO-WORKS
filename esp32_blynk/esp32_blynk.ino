@@ -33,8 +33,8 @@ char pass[] = "humayunsj789";
 //SCK (Serial Clock) <-> 18
 //SS/SDA (Slave select) <-> 5
 
-#define SCL 21
-#define SDA 22
+#define SCL 22
+#define SDA 21z
 
 #define DHTPIN 17//dht pin
 
@@ -42,17 +42,17 @@ char pass[] = "humayunsj789";
 #define SCK 18
 #define MOSI 23
 #define MISO 19
-#define RST_PIN D0
+#define RST_PIN 32
 
 //#define GREEN_LED 2
 //#define RED_LED 14
 
 #define Rainpin 34     // Pin connected to rain detector sensor
 #define Soilpin 35   // Pin connected to soil moisture sensor
-#define Relaypin 26           // Pin connected to relay control
+#define Relaypin 4           // Pin connected to relay control
 //#define lock 10
 
-const int lock = 27;
+const int lock = 2;
 
 bool Relay = 0;
 float soil_threshold =40.0;
