@@ -131,7 +131,7 @@ void soilMoistureSensor() {
 
   //int soilMoisture = ++a;//analogRead(Soilpin);
   int soilMoisture = analogRead(Soilpin);//analogRead(Soilpin);
-  float soil_per =  100 - (((soilMoisture)/1024.0)*100);
+  float soil_per =  100 - (((soilMoisture)/4096.0)*100);
   bool isRaining = digitalRead(Rainpin);
   
   Blynk.virtualWrite(V3, soil_per);     // Send soil moisture to V7 on the Blynk app
@@ -164,7 +164,7 @@ float t;
 void DHT11sensor() {
 //  h =h>100?0:++h; //dht.readHumidity();
  // t =t>100?0:++t;; //dht.readTemperature();
-h =dht.readHumidity();
+  h =dht.readHumidity();
   t =dht.readTemperature();
 
   if (isnan(h) || isnan(t)) {
@@ -207,7 +207,7 @@ void setup()
   lcd.setCursor(0, 0);
   lcd.print("SMART IRRIGATION");
 
-    timer.setInterval(100L, DHT11sensor);
+   timer.setInterval(100L, DHT11sensor);
   timer.setInterval(100L, soilMoistureSensor);
   timer.setInterval(1000L, rfid_func);
  
