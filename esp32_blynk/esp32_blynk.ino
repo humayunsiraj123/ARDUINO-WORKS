@@ -131,15 +131,17 @@ void soilMoistureSensor() {
 
   //int soilMoisture = ++a;//analogRead(Soilpin);
   int soilMoisture = analogRead(Soilpin);//analogRead(Soilpin);
-  int soil_per =  100 - (((soilMoisture)/4096)*100);
-  bool isRaining = digitalRead(Rainpin);
+  float soil_per =  (  ( (soilMoisture/4095.00) * 100 ) );//
+  Serial.print("soil percentage.................... ");
+Serial.println(soil_per);
+bool isRaining =! digitalRead(Rainpin);
  Serial.print("soil value is  ---------------------");
  Serial.println(soilMoisture);
  
   
   Blynk.virtualWrite(V3, soil_per);     // Send soil moisture to V7 on the Blynk app
   Blynk.virtualWrite(V4, isRaining);         // Send rain status to V8 on the Blynk app
-if (isRaining) 
+if (!isRaining) 
   {
     digitalWrite(Relaypin, 1);  // Turn off the water pump
     Serial.println("Rain detected. Water pump is off.");
