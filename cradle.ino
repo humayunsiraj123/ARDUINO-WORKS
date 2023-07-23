@@ -107,7 +107,7 @@ void sendHTTPResponse(WiFiClient& client) {
   client.println();
 
   // Handle the different HTTP routes
-  if (!isAwake) {
+  if (isAwake) {
     // Motion is detected
     if (header.indexOf("GET /26/off") >= 0) {
       // Turn off the buzzer
