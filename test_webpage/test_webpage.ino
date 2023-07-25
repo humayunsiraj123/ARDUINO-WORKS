@@ -1,3 +1,4 @@
+
 #include <WiFi.h>
 #include <Adafruit_Sensor.h>
 
@@ -12,9 +13,9 @@ WiFiServer server(80);
 
 
 
-int water_sensor = 34;
+int water_sensor = 27;
 bool isWet = false;
-int pir_sensor =32;
+int pir_sensor =26;
 bool isAwake =false;
 
 // Variable to store the HTTP request
@@ -24,7 +25,7 @@ String header;
 String output26State = "off";
 
 // Assign output variables to GPIO pins
-const int output26 = 26;//buzer pin
+const int output26 = 32; //buzer pin
 String wet_state ="off";
 
 // Current time
@@ -70,32 +71,32 @@ unsigned long prev_ip_time=0;
 void loop() {
   
   
-  //for debuging only
-  if(millis()-prev_time>5000){
-    prev_time=millis();
-    isWet=!isWet;
-    isAwake=!isAwake;
-    Serial.print("satte::::");
-    Serial.println(isWet);
-    Serial.print("fall::::");
-   Serial.println(isAwake);
-    }
+  // //for debuging only
+  // if(millis()-prev_time>2000){
+  //   prev_time=millis();
+  //   isWet=!isWet;
+  //   isAwake=!isAwake;
+  //   Serial.print("satte::::");
+  //   Serial.println(isWet);
+  //   Serial.print("fall::::");
+  //  Serial.println(isAwake);
+  //   }
     
-//  if(millis()-prev_time>5000){
-//    prev_time=millis();
-//    isWet=digitalRead(water_sensor);
-//    fall =digitalRead(pir_sensor);
-//   // fall=!fall;
-//    Serial.print("wetstate");
-//    Serial.println(isWet);
-//    Serial.print("Pir ");
-//   Serial.println(fall);
-//    }
-//  else{
-//  isRaining =0;
-//    Serial.println("DRYyyyyyyyy");
-//    }
-  //(digitalRead(rainSensorPin) == HIGH);
+ if(millis()-prev_time>2000){
+   prev_time=millis();
+   isWet=!digitalRead(water_sensor);
+   isAwake =digitalRead(pir_sensor);
+  // fall=!fall;
+   Serial.print("wetstate");
+   Serial.println(isWet);
+   Serial.print("AWAKE ..");
+  Serial.println(isAwake);
+   }
+ // else{
+ // isRaining =0;
+ //   Serial.println("DRYyyyyyyyy");
+ //   }
+ //  (digitalRead(rainSensorPin) == HIGH);
 
   WiFiClient client = server.available();   // Listen for incoming clients
 
