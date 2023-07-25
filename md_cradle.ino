@@ -9,9 +9,9 @@ const char* password = "87654321";
 WiFiServer server(80);
 
 // Pin definitions
-int water_sensor = 34;  // Pin connected to the water sensor
+int water_sensor = 27;  // Pin connected to the water sensor
 bool isWet = false;     // Flag to indicate if the water sensor is wet
-int pir_sensor = 32;    // Pin connected to the PIR motion sensor
+int pir_sensor = 26;    // Pin connected to the PIR motion sensor
 bool isAwake = false;   // Flag to indicate if motion is detected
 
 // Variable to store the HTTP request
@@ -21,7 +21,7 @@ String header;
 String output26State = "off";  // State of the buzzer
 
 // Assign output variables to GPIO pins
-const int output26 = 26;  // Pin connected to the buzzer
+const int output26 = 32;  // Pin connected to the buzzer
 
 void setup() {
   Serial.begin(115200);
