@@ -1,0 +1,214 @@
+const char PAGE_HTML[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>LED control</title>
+      <style>
+         body {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         height: 100vh;
+         margin: 0;
+         background-color: #f1f1f1;
+         }
+         .card-container {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         }
+         .card {
+         width: 200px;
+         padding: 20px;
+         margin: 10px;
+         border-radius: 8px;
+         background-image: linear-gradient(135deg, #4fc83e, #32338d);
+         text-align: center;
+         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+         }
+         .switch {
+         position: relative;
+         display: inline-block;
+         width: 90px;
+         height: 34px;
+         }
+         .switch input {
+         display: none;
+         }
+         .slider {
+         position: absolute;
+         cursor: pointer;
+         top: 0;
+         left: 0;
+         right: 0;
+         bottom: 0;
+         background-color: red;
+         -webkit-transition: 0.4s;
+         transition: 0.4s;
+         border-radius: 17px;
+         }
+         .slider:before {
+         position: absolute;
+         content: "";
+         height: 26px;
+         width: 26px;
+         left: 4px;
+         top: 4px;
+         background-color: white;
+         -webkit-transition: 0.4s;
+         transition: 0.4s;
+         border-radius: 50%;
+         }
+         input:checked+.slider {
+         background-color: green;
+         }
+         input:checked+.slider:before {
+         -webkit-transform: translateX(55px);
+         -ms-transform: translateX(55px);
+         transform: translateX(55px);
+         }
+         .button-text {
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         transform: translate(-50%, -50%);
+         color: white;
+         font-size: 12px;
+         }
+      </style>
+   </head>
+   <body>
+      <div class="card-container">
+         <div class="card">
+            <h3>LED Control</h3>
+         </div>
+         <div class="card">
+            <h3>LED-01</h3>
+            <label class="switch">
+            <input type="checkbox" id="buttonOne" />
+            <span class="slider"></span>
+            <span class="button-text" id="buttonOneText">Off</span>
+            </label>
+         </div>
+         <div class="card">
+            <h3>LED-02</h3>
+            <label class="switch">
+            <input type="checkbox" id="buttonTwo" />
+            <span class="slider"></span>
+            <span class="button-text" id="buttonTwoText">Off</span>
+            </label>
+         </div>
+         <div class="card">
+            <h3>LED-03</h3>
+            <label class="switch">
+            <input type="checkbox" id="buttonThree" />
+            <span class="slider"></span>
+            <span class="button-text" id="buttonThreeText">Off</span>
+            </label>
+         </div>
+      </div>
+      <script>
+         function updateButtonText(button, buttonText) {
+           const buttonElement = document.getElementById(button);
+           const buttonTextElement = document.getElementById(buttonText);
+           const value = buttonElement.checked ? "On" : "Off";
+           buttonTextElement.textContent = value;
+         }
+         
+         const buttonOne = document.getElementById("buttonOne");
+         const buttonTwo = document.getElementById("buttonTwo");
+         const buttonThree = document.getElementById("buttonThree");
+         
+         buttonOne.addEventListener("change", function () {
+           updateButtonText("buttonOne", "buttonOneText");
+           const value = this.checked ? "on" : "off";
+           sendRequest("buttonOne=" + encodeURIComponent(value), "/buttonOneEndpoint");
+         
+         });
+         
+         buttonTwo.addEventListener("change", function () {
+           updateButtonText("buttonTwo", "buttonTwoText");
+           const value = this.checked ? "on" : "off";
+           sendRequest("buttonTwo=" + encodeURIComponent(value), "/buttonTwoEndpoint");
+         
+         });
+         
+         buttonThree.addEventListener("change", function () {
+           updateButtonText("buttonThree", "buttonThreeText");
+           const value = this.checked ? "on" : "off";
+           sendRequest("buttonThree=" + encodeURIComponent(value), "/buttonThreeEndpoint");
+         });
+         
+         function sendRequest(params, endpoint) {
+           const xhr = new XMLHttpRequest();
+           xhr.open("POST", endpoint, true);
+           xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+           xhr.send(params);
+         }
+         
+         
+         function syncButtonStatuses() {
+           const xhr = new XMLHttpRequest();
+           xhr.open('GET', '/buttonstatus'); // Change '/buttonstatus' to your endpoint on ESP32 server.
+         
+           xhr.onload = function () {
+             if (xhr.status === 200) {
+               const data = JSON.parse(xhr.responseText);
+         
+               const buttonIds = ["buttonOne", "buttonTwo", "buttonThree"];
+               const buttonTextIds = ["buttonOneText", "buttonTwoText", "buttonThreeText"];
+         
+               for (let i = 0; i < buttonIds.length; i++) {
+                 const button = document.getElementById(buttonIds[i]);
+                 const buttonText = document.getElementById(buttonTextIds[i]);
+         
+                 button.checked = data[buttonIds[i]];
+                 updateButtonText(buttonIds[i], buttonTextIds[i]);
+               }
+             } else {
+               console.error('Request failed. Status:', xhr.status);
+             }
+           };
+         
+           xhr.onerror = function () {
+             console.error('Network error occurred.');
+           };
+         
+           xhr.send();
+         }
+         syncButtonStatuses();
+         
+         // Function to update button status based on the received data
+         function updateButtonStatus(data) {
+           const buttonId = data.buttonId;
+           const state = data.state;
+         
+           const buttonIds = ["buttonOne", "buttonTwo", "buttonThree"];
+           const buttonTextIds = ["buttonOneText", "buttonTwoText", "buttonThreeText"];
+         
+           const button = document.getElementById(buttonIds[buttonId]);
+           const buttonText = document.getElementById(buttonTextIds[buttonId]);
+         
+           button.checked = state;
+           buttonText.textContent = state ? "On" : "Off";
+         }
+         // Set up the EventSource to receive button status updates
+           const eventSource = new EventSource("/events", {
+          });
+           eventSource.addEventListener("buttonState", function(event)  {
+           const data = JSON.parse(event.data);
+           if (data && data.buttonId !== undefined && data.state !== undefined) {
+             updateButtonStatus(data);
+           }
+         });
+         // Handle SSE connection errors
+         eventSource.onerror = function (error) {
+         console.log("SSE connection error:", error);
+         };
+         
+      </script>
+   </body>
+</html>
+)=====";
