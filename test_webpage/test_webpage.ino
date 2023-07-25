@@ -46,7 +46,7 @@ void setup() {
  // pinMode(output27, OUTPUT);
   pinMode(water_sensor, INPUT);
   pinMode(pir_sensor, INPUT);
-  pinMode(LED_BUILTIN,OUTPUT);
+  //pinMode(LED_BUILTIN,OUTPUT);
   
 
   // Connect to Wi-Fi network with SSID and password
@@ -128,14 +128,14 @@ void loop() {
               if(header.indexOf("GET /26/off") >= 0){
                 Serial.println("BUZZER OFF");
                 output26State = "off";
-                digitalWrite(LED_BUILTIN, 0);
+               // digitalWrite(LED_BUILTIN, 0);
                digitalWrite(output26, 0);
                
                 }
               else{
               Serial.println("BUZZER HIGH");
                 output26State = "on";
-                digitalWrite(LED_BUILTIN, 1);
+                //digitalWrite(LED_BUILTIN, 1);
                digitalWrite(output26, 1);
                 
                 }
