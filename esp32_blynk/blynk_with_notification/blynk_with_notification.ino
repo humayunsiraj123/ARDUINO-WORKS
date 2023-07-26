@@ -1,12 +1,4 @@
-#define BLYNK_TEMPLATE_ID "TMPL2xW1qNNeE"
-#define BLYNK_TEMPLATE_NAME "Smart Irrigation System"
 
-
- 
- 
-// Comment this out to disable prints and save space
-#define BLYNK_PRINT Serial
- 
  
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -17,7 +9,9 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <Wire.h>
- 
+
+#define BLYNK_PRINT Serial 
+
 #define BLYNK_TEMPLATE_ID "TMPL2xW1qNNeE"
 #define BLYNK_TEMPLATE_NAME "Smart Irrigation System"
 
@@ -34,7 +28,7 @@ char pass[] = "humayunsj789";
 //SS/SDA (Slave select) <-> 5
 
 #define SCL 22
-#define SDA 21z
+#define SDA 21
 
 #define DHTPIN 17//dht pin
 
@@ -54,7 +48,7 @@ char pass[] = "humayunsj789";
 #define BUZZER 13
 #define LED_G 26
 #define LED_R 25
-const int lock = 2;
+const int lock = 18;
 
 bool Relay = 0;
 float soil_threshold =40.0;
@@ -64,7 +58,7 @@ bool rfid_cntrl =0;
 
 DHT dht(DHTPIN, DHT11);
 BlynkTimer timer;
-LiquidCrystal_I2C lcd(0x3F, 16, 2);// if lcd not work change address ox3F to 0x27
+LiquidCrystal_I2C lcd(0x27, 16, 2);// if lcd not work change address ox3F to 0x27
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 
 
@@ -81,7 +75,7 @@ BLYNK_WRITE(V6) {
 
 void rfid_func(){
   if(rfid_cntrl){
-    digitalWrite(LED_R,0)
+    //digitalWrite(LED_R,0);
     Serial.println("RFID CNTRL IS HIGH");
 if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
 ;
@@ -96,7 +90,7 @@ if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
      
       delay(3000);                    
       digitalWrite(lock, HIGH);
-      digitalWrite(GREEN_LED, LOW);   
+      digitalWrite(LED_G, LOW);   
     } else {
       Serial.println("Invalid Card");
      // digitalWrite(RED_LED, HIGH);    
@@ -141,16 +135,19 @@ void soilMoistureSensor() {
 
   //int soilMoisture = ++a;//analogRead(Soilpin);
   int soilMoisture = analogRead(Soilpin);//analogRead(Soilpin);
-  float soil_per =  100- (  ( (soilMoisture/4095.00) * 100 ) );//
+  float soil_per =  100 - (  ( (soilMoisture/4095.00) * 100 ) );//
   Serial.print("soil percentage.................... ");
-Serial.println(soil_per);
-  if(soil_per<threshold){
-    Blynk.logEvent("water_level_alert","soil humidity is on low level turn on pump");
+  Serial.println(soil_per);
+  
+  if(soil_per<soil_threshold){
+    
+    //Blynk.logEvent("water_level_alert","soil humidity is on low level turn on pump");
   
   }
  // Blynk.email("abbc@.com", "pump_on", "water pump is on ");
     //Blynk.notify("pump_on : water pump is on ");
     Blynk.logEvent("pump_on","water pump is on");
+    
 bool isRaining =! digitalRead(Rainpin);
  Serial.print("soil value is  ---------------------");
  Serial.println(soilMoisture);
@@ -158,14 +155,18 @@ bool isRaining =! digitalRead(Rainpin);
   
   Blynk.virtualWrite(V3, soil_per);     // Send soil moisture to V7 on the Blynk app
   Blynk.virtualWrite(V4, isRaining);         // Send rain status to V8 on the Blynk app
-if (!isRaining) 
+if (isRaining) 
   {
     digitalWrite(Relaypin, 1);  // Turn off the water pump
     Serial.println("Rain detected. Water pump is off.");
     digitalWrite(BUZZER,1);
+    digitalWrite(2,1);
+    Serial.println("buzzer is 1111111");
+    
     Blynk.virtualWrite(V4, "Rain Detected");  // Send status message to V9 on the Blynk app
+   Blynk.logEvent("rain_detection","Its rainin outside");
   } 
-  else if (soil_per> soil_threshold) 
+  else if (soil_per< soil_threshold) 
   {  // Adjust the threshold value based on your soil moisture sensor
     digitalWrite(Relaypin, 0);  // Turn on the water pump
     Serial.println("Soil moisture is low. Water pump is on.");
@@ -181,6 +182,8 @@ if (!isRaining)
     Serial.println("Soil moisture is sufficient. Water pump is off.");
     Blynk.virtualWrite(V12, "Idle");  // Send status
     digitalWrite(BUZZER,0);
+    Serial.println("buzzer is 0000000");
+    digitalWrite(2,0);
   }
 //  lcd.setCursor(0, 0);
 //  lcd.print("Moisture :");
@@ -223,7 +226,7 @@ void setup()
   pinMode(LED_G,OUTPUT);
   pinMode(LED_R,OUTPUT);
   pinMode(BUZZER,OUTPUT);
-  pinMode(LED_BUILTIN,OUTPUT);
+  pinMode(2,OUTPUT);
   digitalWrite(Relaypin,1);
 
   
@@ -251,6 +254,5 @@ void loop()
 {
   Blynk.run();
    timer.run();  //Run the Blynk timer
-   //int potvalue=analogRead(36);
-  //Blynk.virtualWrite(V1,potvalue);
+ 
 }
