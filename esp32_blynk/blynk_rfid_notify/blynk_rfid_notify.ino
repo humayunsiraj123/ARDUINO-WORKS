@@ -50,7 +50,7 @@ char pass[] = "humayunsj789";
 #define LED_R 25
 const int lock = 18;
 
-bool Relay = 0;
+int Relay = 0;
 float soil_threshold =40.0;
 int rfid_cntrl =0;
 
@@ -69,36 +69,6 @@ BLYNK_WRITE(V6) {
   rfid_cntrl= param.asInt();
   Serial.print("RIFD STATE");
   Serial.println(rfid_cntrl);
- 
- if(rfid_cntrl)
-  {
-    //digitalWrite(LED_R,0);
-    Serial.print("RFID CNTRL IS HIGH");
-    Serial.println(rfid_cntrl);
-    
-if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-
-    // Check if card UID matches pre-programmed card UID
-    if (memcmp(mfrc522.uid.uidByte, cardUID, mfrc522.uid.size) == 0) {
-      // Card matched
-      Serial.println("Match found");
-      digitalWrite(LED_G, HIGH);  
-      digitalWrite(lock, LOW); 
-      delay(3000);                    
-      digitalWrite(lock, HIGH);
-      digitalWrite(LED_G, LOW);   
-    } else {
-      Serial.println("Invalid Card");
-      digitalWrite(LED_R, HIGH);    
-      delay(1000);                    
-      digitalWrite(LED_R, LOW);     
-    }
-
-    mfrc522.PICC_HaltA();
-    mfrc522.PCD_StopCrypto1();
-  }  
-  }
-  
 }
 
 
@@ -109,6 +79,7 @@ void rfid_func(){
     //digitalWrite(LED_R,0);
     Serial.print("RFID CNTRL IS HIGH");
     Serial.println(rfid_cntrl);
+    
 if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
 
     // Check if card UID matches pre-programmed card UID
@@ -153,10 +124,7 @@ BLYNK_WRITE(V12) {
 int a=1;
 //Get the soil moisture values
 void soilMoistureSensor() {
-  
-//  int value = analogRead(sensor);
-//  value = map(value, 0, 1024, 0, 100);
-//  value = (value - 100) * -1;
+
 
   //int soilMoisture = ++a;//analogRead(Soilpin);
   int soilMoisture = analogRead(Soilpin);//analogRead(Soilpin);
@@ -164,14 +132,14 @@ void soilMoistureSensor() {
   Serial.print("soil percentage.................... ");
   Serial.println(soil_per);
   
-  if(soil_per<soil_threshold){
+  //if(soil_per<soil_threshold){
     
     //Blynk.logEvent("water_level_alert","soil humidity is on low level turn on pump");
   
-  }
+  //}
  // Blynk.email("abbc@.com", "pump_on", "water pump is on ");
     //Blynk.notify("pump_on : water pump is on ");
-    Blynk.logEvent("pump_on","water pump is on");
+  //  Blynk.logEvent("pump_on","water pump is on");
     
 bool isRaining =! digitalRead(Rainpin);
  Serial.print("soil value is  ---------------------");
@@ -185,7 +153,7 @@ if (isRaining)
     digitalWrite(Relaypin, 1);  // Turn off the water pump
     Serial.println("Rain detected. Water pump is off.");
     digitalWrite(BUZZER,1);
-    digitalWrite(2,1);
+    digitalWrite(2,0);
     Serial.println("buzzer is 1111111");
     
     Blynk.virtualWrite(V4, "Rain Detected");  // Send status message to V9 on the Blynk app
@@ -199,11 +167,18 @@ if (isRaining)
     // Blynk.email("abbc@.com", "pump_on", "water pump is on ");
     //Blynk.notify("pump_on : water pump is on ");
     Blynk.logEvent("pump_on","water pump is on");
-  
+  digitalWrite(2,1);
   }
   else
   {
-    digitalWrite(Relaypin, 1);  // Turn off the water pump
+    if(!Relay){
+    digitalWrite(Relaypin, 1);
+    digitalWrite(2,0);}
+   // else{
+    //  digitalWrite(Relaypin, 1);}
+    
+      
+    // Turn off the water pump
     Serial.println("Soil moisture is sufficient. Water pump is off.");
     Blynk.virtualWrite(V12, "Idle");  // Send status
     digitalWrite(BUZZER,0);
@@ -270,7 +245,7 @@ void setup()
 
    timer.setInterval(1000L, DHT11sensor);
   timer.setInterval(1000L, soilMoistureSensor);
-  //timer.setInterval(5000L, rfid_func);
+  timer.setInterval(1000L, rfid_func);
  
  // Blynk.begin(auth, ssid, pass);
  
