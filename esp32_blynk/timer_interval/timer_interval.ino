@@ -159,6 +159,17 @@ if (isRaining)
     Blynk.virtualWrite(V4, "Rain Detected");  // Send status message to V9 on the Blynk app
    Blynk.logEvent("rain_detection","Its rainin outside");
   } 
+else if (!isRaining) 
+  {
+    //digitalWrite(Relaypin, 1);  // Turn off the water pump
+    //Serial.println("Rain detected. Water pump is off.");
+    //digitalWrite(BUZZER,0);
+   // digitalWrite(2,0);
+    Serial.println("buzzer is  000000");
+    
+    Blynk.virtualWrite(V4, "Rain Detected");  // Send status message to V9 on the Blynk app
+   Blynk.logEvent("rain_detection","Its rainin outside");
+  } 
   else if (soil_per< soil_threshold) 
   {  // Adjust the threshold value based on your soil moisture sensor
     digitalWrite(Relaypin, 0);  // Turn on the water pump
@@ -243,9 +254,9 @@ void setup()
   lcd.setCursor(0, 0);
   lcd.print("SMART IRRIGATION");
 
-   timer.setInterval(500L, DHT11sensor);
-  timer.setInterval(500L, soilMoistureSensor);
-  timer.setInterval(1000L, rfid_func);
+   timer.setInterval(1000L, DHT11sensor);
+  timer.setInterval(1000L, soilMoistureSensor);
+  timer.setInterval(150L, rfid_func);
  
  // Blynk.begin(auth, ssid, pass);
  
