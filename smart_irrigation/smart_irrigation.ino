@@ -45,56 +45,60 @@ int min_th_array [4][4] ={{220,330,320,310},
                     {220,330,320,310},
                     {220,330,320,310},
                     {220,220,320,310},};
-// For wheat the irrigation schedule is for 240 days :
-//For sanday loam soil, wheat needs 41.97mm of water on 15th day, 60.7mm of water on day 37, 111mm on day 97, 139mm on day 129, 157.9mm on day 51, 173mm on day 73, 175mm on days 185, 199, 212 and 229.
-//For Silt loam soil type wheat need,  78,67 mm of water on 27 day, 186 mm of water on day 111, 236mm on day 150, 263mm on days 187, 199 and 220.
-//For Sandy clay soil type wheat need, 36.1mm of water on 13th day, 48.3mm of water on day 21, 73.6mm on day 62, 108mm on day 107, 127.9mm on day 133, 141mm on day 151, 154mm on 168th day , 157mm on days 183, 195, 208 and 221.
-//For Loam soil type   wheat need, 55.4 mm of water on 19th day, 97.1 mm of water on day 59, 157mm on day 117, 189mm on day 148, 212mm on day 179, 213mm on days 190th, and 224th.
-
-int event_day[3][4][20]={{{15,37,51,73,97,129,185,199,212,229},
+                    
+int event_day[3][4][15]={
+                      {{15,37,51,73,97,129,185,199,212,229},
                        {27,111,150,187,199,220},
                        {13,21,62,107,133,151,168,183,195,208,221},
-                       {19,59,117,148,179,190,224},
-                       },
+                       {19,59,117,148,179,190,224},},
+                       
                        {{95,126,148,168,97,191},
                        {112,148,168,179},
                        {91,119,140,159,178},
-                       {103,137,161,188},
-                       },
+                       {103,137,161,188},},
 
                        {{98, 131, 153, 171, 188, 202, 215,228, 253, 337},
                        {116, 153,180, 202, 223, 224,363},
                        {95, 126, 147, 164, 179, 183, 205, 218, 229, 243, 333},
-                       {107, 143 , 165, 186, 203,  220, 238, 348},
-                       }
+                       {107, 143 , 165, 186, 203,  220, 238, 348},}
                        };
                        
-int event_day[4][20]={{95,126,148,168,97,191},
-                       {112,148,168,179},
-                       {91,119,140,159,178},
-                       {103,137,161,188},
-                       };
-                       
-int event_day[4][20]={{98, 131, 153, 171, 188, 202, 215,228, 253, 337},
-                       {116, 153,180, 202, 223, 224,363},
-                       {95, 126, 147, 164, 179, 183, 205, 218, 229, 243, 333},
-                       {107, 143 , 165, 186, 203,  220, 238, 348},
-                       };
+//int event_day[4][20]={{172,172,172,172,172,172},
+//                       {256,256,256,256},
+//                       {152,152,152,152,152},
+//                       {208,208,208,208},
+//                       };
+//                       
+//int event_day[4][20]={{194,194, 194, 194, 194, 194, 194,194, 194, 194},
+//                       {293, 293,293, 293, 293, 293,293},
+//                       {174, 174, 174, 174, 174, 174, 174, 174, 174, 174,174},
+//                       {237, 237 , 237, 237, 237,  237, 237, 237},
+//                       };
 
 
                        
 
-int event_level[4][20]={{42,60,111,139,158,173,175,175,175,175},
-                      {79,186,236,263,268,263},
-                       {13,21,62,107,133,151,168,183,195,208,221},
-                       {19,59,117,148,179,190,224},
-  
-  };
+int event_level[3][4][15]={ 
+                        {{42,60,111,139,158,173,175,175,175,175},
+                        {79,186,236,263,268,263},
+                        {13,21,62,107,133,151,168,183,195,208,221},
+                        {19,59,117,148,179,190,224},},
+                       
+                       {{172,172,172,172,172,172},
+                       {256,256,256,256},
+                       {152,152,152,152,152},
+                       {208,208,208,208},},
+                       
+                       {{194,194, 194, 194, 194, 194, 194,194, 194, 194},
+                       {293, 293,293, 293, 293, 293,293},
+                       {174, 174, 174, 174, 174, 174, 174, 174, 174, 174,174},
+                       {237, 237 , 237, 237, 237,  237, 237, 237},}
+                       };
   
                       
 int moist_sensor[2] = {A0,A1};
 int day_index=0;
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(0x20, 16, 2);
 RTC_DS1307 rtc;
 const int led= 13;
 //unsigned long prev_time=0;
@@ -122,7 +126,7 @@ void setup() {
   lcd.backlight();
   lcd.setCursor(0,0);
   lcd.print("     WELCOM     ");
-  lcd.setCursor(1,0);
+  lcd.setCursor(0,1);
   lcd.print("SMART IRRIGATION");
   delay(2000);
   lcd.clear();
@@ -162,7 +166,7 @@ mean_moist = (moist_1 + moist_2)/2;
 //unsigned long theDateWeGotTogether =946684800;//1jan2000 //1194242400   ;  //in unixtime
 days_count=millis()/2000;//
 if(days_count-pre_day>1){
-Serial.print("DAY:");
+Serial.print("DAY: ");
 Serial.println(days_count);
 pre_day =days_count;
 }
@@ -174,7 +178,7 @@ pre_day =days_count;
 //{backup=0;
 //  }
 if(crop_flag==0){
-//  lcd.setCursor(1,0);
+//  lcd.setCursor(0,1);
 //  lcd.print("");
   lcd.setCursor(0,0);
   lcd.println("SELECT CROP");
@@ -184,7 +188,7 @@ if(crop_flag==0){
    crop_flag=1;
    crop_type=crops[0]; 
    Serial.println("crop is WHEAT");
-   lcd.setCursor(1,0);
+   lcd.setCursor(0,0);
    lcd.println("CROP : WHEAT");
    crop_index=0;
      Serial.println("SELECT SOIL");
@@ -194,7 +198,7 @@ if(crop_flag==0){
    crop_flag=1;
    crop_type=crops[1]; 
    Serial.println("crop is cotton"); 
-   lcd.setCursor(1,0);
+   lcd.setCursor(0,0);
    lcd.println("CROP : COTTON");
    crop_index=1;
      Serial.println("SELECT SOIL");
@@ -204,7 +208,7 @@ if(crop_flag==0){
    crop_flag=1;
    crop_type=crops[2]; 
     Serial.println("crop is sugar");
-    lcd.setCursor(1,0);
+    lcd.setCursor(0,0);
     lcd.println("CROP : SUGAR");
    crop_index=2;
    Serial.println("SELECT SOIL");
@@ -215,46 +219,52 @@ if(crop_flag==0){
     
  if (crop_flag==1 && soil_flag ==0){
 
-  lcd.setCursor(0,0);
+  lcd.setCursor(0,1);
   lcd.print("SELECT SOIL");
 //Serial.println("SELECT SOIL");
   if(b4.isPressed()){
    soil_flag=1;
    soil_type=soil[0]; 
-   lcd.setCursor(1,0);
-   Serial.print("SOIL is sandy loam soil");
+   lcd.setCursor(0,1);
+   Serial.println("SOIL is sandy loam soil");
    lcd.print("SANDY_LOAM_SOIL");
    soil_index=0;
+   lcd.setCursor(0,0);
+   lcd.print(String(crops[crop_index]));
    
     }
   if(b5.isPressed()){
    soil_flag=1;
    soil_type=soil[1]; 
-   lcd.setCursor(1,0);
-   Serial.print("SOIL is SILT loam soil");
+   lcd.setCursor(0,1);
+   Serial.println("SOIL is SILT loam soil");
    lcd.print("SILT_LOAM_SOIL");
    soil_index=1;
+   lcd.setCursor(0,0);
+   lcd.print(String(crops[crop_index]));
     }
     
     if(b6.isPressed()){
    soil_flag=1;
    soil_type=soil[2]; 
-   lcd.setCursor(1,0);
-   Serial.print("SOIL is sandy clay loam soil");
+   lcd.setCursor(0,1);
+   Serial.println("SOIL is sandy clay loam soil");
    lcd.print("SANDY_CLAY_SOIL");
    soil_index=2;
+   lcd.setCursor(0,0);
+   lcd.print(String(crops[crop_index]));
    }
 
    if(b7.isPressed()){
    soil_flag=1;
    soil_type=soil[3]; 
-   lcd.setCursor(1,0);
-   Serial.print("SOIL is  loam soil");
+   lcd.setCursor(0,1);
+   Serial.println("SOIL is  loam soil");
    lcd.print("LOAM_SOIL");
    soil_index=3;
-   }
    lcd.setCursor(0,0);
-   lcd.print(crop_type);
+   lcd.print(String(crops[crop_index]));
+   }
   }
 
   max_th = max_th_array[crop_index];
@@ -270,13 +280,13 @@ if(crop_flag==0){
 //    Serial.println("pump is off");
 //  }
 
-if(days_count == event_day[soil_index][day_index]){
+if( (soil_flag==1 && crop_flag==1)&&(days_count == event_day[crop_index][soil_index][day_index])){
   day_index++;
   backup_irrigate= 0 ;
   pulse=0;
   } 
  
-water_level_th = event_level[soil_index][day_index] ; 
+water_level_th = event_level[crop_index][soil_index][day_index] ; 
 
 if((soil_flag==1 && crop_flag==1) &&(days_count-prex>2 )){
 prex=days_count;
