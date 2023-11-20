@@ -1,7 +1,9 @@
 #include <Wire.h>
+//#include "Time.h"
 #include "RTClib.h"
 #include <LiquidCrystal_I2C.h>
 #include <ezButton.h>
+
 
 
 ezButton b1(3);//wheat button
@@ -28,7 +30,7 @@ int crop_index;
 int day_index=0;
 bool crop_flag=0;
 bool soil_flag=0;
-bool backup=1;
+bool backup=0;
 int  mean_moist=0;
 int max_th;
 int min_th;
@@ -103,9 +105,22 @@ int event_level[4][4][15]={
                        };
 
 //lib function initialization
-LiquidCrystal_I2C lcd(0x20, 16, 2);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 RTC_DS1307 rtc;
 
+
+void TimerOne_setPeriod(long OCRValue) 
+
+{
+  TCCR1B = _BV(WGM12)|_BV(CS12)|_BV(CS10);   // CTC mode - 1024 prescale
+                                             //  TCCR1B = _BV(WGM12)|_BV(CS12)|_BV(CS11)|_BV(CS10); is the entire command but since CS11=0 its left out
+                                             //  manipulates prescale (one of the parameters we can manipulate**we want to use prescales that yeields high ORC values for more reliable signals 
+  TCCR1A = _BV(COM1A0);                      //  or use TCCR1A = 0x40;            // Toggle mode 0C1A  
+                                             //  This is used to toggle on pin 11 ** pin 11 = 0 x 1 so COM(COM1A1) = 0 and is not in code
+                                             //  **Determines pin behavor
+  OCR1A = OCRValue;                          //  set the counter
+}
+unsigned long irrigate_day;
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -114,12 +129,14 @@ void setup() {
  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
   //initialization and assignment
+
+  pinMode(11, OUTPUT);
   pinMode(level_sensor,INPUT);
   pinMode(moist_sensor[0],INPUT);
   pinMode(moist_sensor[1],INPUT);
   pinMode(motor,OUTPUT);
   digitalWrite(motor,1);
-  
+  TimerOne_setPeriod(781.25);
   b1.setDebounceTime(50);
   b2.setDebounceTime(50);
   b3.setDebounceTime(50);
@@ -142,17 +159,40 @@ void setup() {
   delay(2000);
   lcd.clear();
   Serial.println("SELECT CROP");
-  now=rtc.now();
-  start_time=now.unixtime();
+  delay(1000);
+  //now=rtc.now();
+  //start_time=now.unixtime();
+  analogWrite(11,8);
+  delay(2000);
 }
+
+unsigned long time;
+unsigned long daily_irrigation;
 
 int prex;
 void loop() {
 //rtc days counting
-//days_count = millis()/2000;//
-now=rtc.now();
-curr_time  = now.unixtime();
-days_count = (curr_time - start_time)/3 ; 
+//analogWriteResolution(4);
+
+if((millis()-time)>3000){
+  time=millis();
+Serial.println(String(days_count));
+now= rtc.now();
+curr_time=now.unixtime();
+days_count++;
+
+}
+
+
+//days_count = (rtc.now()-start_time)/3; // millis()/2000;//
+// if((curr_time-start_time)>3000){
+//   ++days_count;
+//   now=rtc.now();
+//   start_time=now.unixtime();
+// }
+//now=rtc.now();
+//curr_time  = now.unixtime();
+//days_count = (curr_time - start_time)/3 ; 
 // 
  //buttons loopings 
   b1.loop();
@@ -165,9 +205,6 @@ days_count = (curr_time - start_time)/3 ;
   b8.loop();
 
 // soilmoisture reading  
-int moist_1 = analogRead(A0);
-int moist_2 = analogRead(A1);
-mean_moist = (moist_1 + moist_2)/2;
 
 
 
@@ -177,12 +214,12 @@ Serial.println(days_count);
 pre_day = days_count;
 }
 
-if(mean_moist>1024 | mean_moist<0 )
-{backup=1;
-  }
-else 
-{backup=0;
-  }
+// if(mean_moist>1024 | mean_moist<0 )
+// {backup=1;
+//   }
+// else 
+// {backup=0;
+//   }
 
 if(crop_flag==0){
   lcd.setCursor(0,0);
@@ -194,7 +231,7 @@ if(crop_flag==0){
    crop_type=crops[0]; 
    Serial.println("crop is WHEAT");
    lcd.setCursor(0,0);
-   lcd.println("CROP : WHEAT");
+   lcd.print("CROP : WHEAT");
    crop_index=0;
    Serial.println("SELECT SOIL");
     }
@@ -204,7 +241,7 @@ if(crop_flag==0){
     crop_type=crops[1]; 
     Serial.println("RICE CROP");
     lcd.setCursor(0,0);
-    lcd.println("CROP : RICE");
+    lcd.print("CROP : RICE");
     crop_index=1;
     Serial.println("SELECT SOIL");
    }
@@ -214,7 +251,7 @@ if(crop_flag==0){
    crop_type=crops[2]; 
    Serial.println("crop is cotton"); 
    lcd.setCursor(0,0);
-   lcd.println("CROP : COTTON");
+   lcd.print("CROP : COTTON");
    crop_index=2;
      Serial.println("SELECT SOIL");
     }
@@ -224,7 +261,7 @@ if(crop_flag==0){
     crop_type=crops[2]; 
     Serial.println("crop is sugar");
     lcd.setCursor(0,0);
-    lcd.println("CROP: SUGAR CANE");
+    lcd.print("CROP: SUGAR CANE");
    crop_index=3;
    Serial.println("SELECT SOIL");
    }
@@ -245,7 +282,7 @@ if(crop_flag==0){
    lcd.print("SANDY_LOAM_SOIL");
    soil_index=0;
    lcd.setCursor(0,0);
-   lcd.print(String(crops[crop_index]));
+   //lcd.print(String(crops[crop_index]));
    
     }
   if(b6.isPressed()){
@@ -256,7 +293,7 @@ if(crop_flag==0){
    lcd.print("SILT_LOAM_SOIL");
    soil_index=1;
    lcd.setCursor(0,0);
-   lcd.print(String(crops[crop_index]));
+   //lcd.print(String(crops[crop_index]));
     }
     
     if(b7.isPressed()){
@@ -267,7 +304,7 @@ if(crop_flag==0){
    lcd.print("SANDY_CLAY_SOIL");
    soil_index=2;
    lcd.setCursor(0,0);
-   lcd.print(String(crops[crop_index]));
+   //lcd.print(String(crops[crop_index]));
    }
 
    if(b8.isPressed()){
@@ -278,7 +315,7 @@ if(crop_flag==0){
    lcd.print("LOAM_SOIL");
    soil_index=3;
    lcd.setCursor(0,0);
-   lcd.print(String(crops[crop_index]));
+   //lcd.print(String(crops[crop_index]));
    }
   }
 
@@ -287,11 +324,32 @@ max_th = max_th_array[crop_index];
 min_th = min_th_array[crop_index][soil_index];
 
   // irrigation main system based on soil_mositure reading
+if((days_count - daily_irrigation>1)&&(soil_flag==1 && crop_flag==1) ){
+int moist_1 = analogRead(A0);
+int moist_2 = analogRead(A1);
+
+mean_moist = (moist_1 + moist_2)/2;
+//delay(100);
+lcd.setCursor(0,0);
+lcd.print("DAILY IRRIGATION");
+lcd.setCursor(0,1);
+
 if((mean_moist > max_th) && backup==0){
     digitalWrite(motor,0);//motor on
+  lcd.print("pump ON          ");
   } 
+
   else if((mean_moist < min_th)&& backup==0){
     digitalWrite(motor,1);//motor off
+    lcd.print("pump OFF        ");
+    daily_irrigation = days_count;
+    delay(50);
+    lcd.setCursor(0,0);
+    lcd.print("CROP IRRIGATION");
+    lcd.setCursor(0,1);
+    lcd.print("DAY : ");
+    lcd.print(days_count);
+  }
   }
 
 //backup system schedule baseed irrigation
@@ -308,35 +366,30 @@ water_level_th = event_level[crop_index][soil_index][day_index] ;
 if((soil_flag==1 && crop_flag==1) &&(days_count-prex>2 )){
 prex=days_count;
 
-Serial.print("day index");
-Serial.println(day_index);
-Serial.print("water_level_th");
+Serial.print("Next irrigation on ");
+Serial.println(event_day[crop_index][soil_index][day_index]);
+Serial.print("water_level_th ");
 Serial.println(water_level_th);
-Serial.print("VOLUME");
+Serial.print("VOLUME ");
 Serial.println(volume);
 
-//Serial.print("cropIndex");
-//  Serial.println(crop_index);
-//  Serial.print("soilIndex");
-//  Serial.println(soil_index);
-//  Serial.print("max_th");
-//  Serial.println(max_th);
-//  Serial.print("min_th");
-//  Serial.println(min_th);
-//  Serial.print("cropIndex");
-//  Serial.println(crop_index);
-//  Serial.print("soilIndex");
-//  Serial.println(soil_index);
-//  Serial.print("max_th");
-//  Serial.println(max_th);
-//  Serial.print("min_th");
-//  Serial.println(min_th);
-  //delay(000);
+Serial.print("cropIndex ");
+ Serial.println(crop_index);
+ Serial.print("soilIndex ");
+ Serial.println(soil_index);
+ Serial.print("max_th ");
+ Serial.println(max_th);
+ Serial.print("min_th ");
+ Serial.println(min_th);
+ Serial.print("moist ");
+ Serial.println(mean_moist);
+ 
+  delay(1000);
   }
 
 //flow meter volume
 
-volume = 2.5*pulse;
+volume = (2.66*pulse)/10;//00;//2.66 calibration factor and div by 1000 for mmm
 //backup system motor on the scedule days and irrigating for water level threshold
 
 if(volume<water_level_th && backup==1 &&  backup_irrigate==0)
@@ -344,12 +397,13 @@ if(volume<water_level_th && backup==1 &&  backup_irrigate==0)
   digitalWrite(motor,0);//motor on
   }
 
-else if(volume>water_level_th && backup==1 )
+else if(volume>water_level_th && backup==1)
 {
   digitalWrite(motor,1);//motor off
     //Serial.println("PUMP is off .........");
     backup_irrigate =1;
   } 
+ 
 }
 
 //function for flow meter pulse counting
