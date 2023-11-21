@@ -214,12 +214,7 @@ Serial.println(days_count);
 pre_day = days_count;
 }
 
-// if(mean_moist>1024 | mean_moist<0 )
-// {backup=1;
-//   }
-// else 
-// {backup=0;
-//   }
+
 
 if(crop_flag==0){
   lcd.setCursor(0,0);
@@ -330,18 +325,34 @@ int moist_2 = analogRead(A1);
 
 mean_moist = (moist_1 + moist_2)/2;
 //delay(100);
+// lcd.setCursor(0,0);
+// lcd.print("DAILY IRRIGATION");
+// lcd.setCursor(0,1);
+
+if((mean_moist>1000 | mean_moist<5 ))
+{backup=1;
+lcd.setCursor(0,0);
+lcd.print("ALERT BACKUP");
+lcd.setCursor(0,1);
+lcd.print("     SYSTEM     ");
+  }
+
+else 
+{backup=0;
 lcd.setCursor(0,0);
 lcd.print("DAILY IRRIGATION");
-lcd.setCursor(0,1);
+  }
 
 if((mean_moist > max_th) && backup==0){
     digitalWrite(motor,0);//motor on
-  lcd.print("pump ON          ");
+  lcd.setCursor(0,1);
+  lcd.print("PUMP ON          ");
   } 
 
   else if((mean_moist < min_th)&& backup==0){
+    lcd.setCursor(0,1);
     digitalWrite(motor,1);//motor off
-    lcd.print("pump OFF        ");
+    lcd.print("PUMP OFF        ");
     daily_irrigation = days_count;
     delay(50);
     lcd.setCursor(0,0);
@@ -389,7 +400,7 @@ Serial.print("cropIndex ");
 
 //flow meter volume
 
-volume = (2.66*pulse)/10;//00;//2.66 calibration factor and div by 1000 for mmm
+volume = (2.66*pulse);/////2.66 calibration factor and div by 1000 for mmm
 //backup system motor on the scedule days and irrigating for water level threshold
 
 if(volume<water_level_th && backup==1 &&  backup_irrigate==0)
