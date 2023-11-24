@@ -41,7 +41,7 @@ int water_level_th=0;
 int volume;
 int pre_day =0 ;
 volatile long pulse;
-
+bool daily_motor=0;
 DateTime now;
 unsigned long start_time;
 unsigned long curr_time;
@@ -174,7 +174,7 @@ void loop() {
 //rtc days counting
 //analogWriteResolution(4);
 
-if((millis()-time)>3000){
+if(((millis()-time)>3000)&&(soil_flag==1 && crop_flag==1)){
   time=millis();
 Serial.println(String(days_count));
 now= rtc.now();
@@ -319,7 +319,7 @@ max_th = max_th_array[crop_index];
 min_th = min_th_array[crop_index][soil_index];
 
   // irrigation main system based on soil_mositure reading
-if((days_count - daily_irrigation>1)&&(soil_flag==1 && crop_flag==1) ){
+if(((days_count - daily_irrigation>1)|daily_motor==0)&&(soil_flag==1 && crop_flag==1) ){
 int moist_1 = analogRead(A0);
 int moist_2 = analogRead(A1);
 
@@ -330,11 +330,14 @@ mean_moist = (moist_1 + moist_2)/2;
 // lcd.setCursor(0,1);
 
 if((mean_moist>1000 | mean_moist<5 ))
-{backup=1;
-lcd.setCursor(0,0);
-lcd.print("ALERT BACKUP");
-lcd.setCursor(0,1);
-lcd.print("     SYSTEM     ");
+{
+  backup=1;
+
+// lcd.setCursor(0,0);
+// lcd.print("ALERT BACKUP    ");
+// lcd.setCursor(0,1);
+// lcd.print("     SYSTEM     ");
+  
   }
 
 else 
@@ -347,9 +350,10 @@ if((mean_moist > max_th) && backup==0){
     digitalWrite(motor,0);//motor on
   lcd.setCursor(0,1);
   lcd.print("PUMP ON          ");
+  daily_motor=1;
   } 
 
-  else if((mean_moist < min_th)&& backup==0){
+  else if((mean_moist < min_th)&& backup==0 && daily_motor==1){
     lcd.setCursor(0,1);
     digitalWrite(motor,1);//motor off
     lcd.print("PUMP OFF        ");
@@ -360,13 +364,14 @@ if((mean_moist > max_th) && backup==0){
     lcd.setCursor(0,1);
     lcd.print("DAY : ");
     lcd.print(days_count);
+    daily_motor=0;
   }
   }
 
 //backup system schedule baseed irrigation
 if((soil_flag==1 && crop_flag==1)&&(days_count == event_day[crop_index][soil_index][day_index])){
   day_index++;
-  backup_irrigate= 0 ;
+  backup_irrigate= 1 ;
   pulse=0;
   } 
  
@@ -403,15 +408,23 @@ Serial.print("cropIndex ");
 volume = (2.66*pulse);/////2.66 calibration factor and div by 1000 for mmm
 //backup system motor on the scedule days and irrigating for water level threshold
 
-if(volume<water_level_th && backup==1 &&  backup_irrigate==0)
-{
-  digitalWrite(motor,0);//motor on
+if(volume<water_level_th && backup==1 &&  backup_irrigate==1)
+{lcd.setCursor(0,0);
+lcd.print("BACKUP SYSTEM   ");
+lcd.setCursor(0,1);
+lcd.print("PUMP ON         ");
+digitalWrite(motor,0);//motor on
   }
 
 else if(volume>water_level_th && backup==1)
 {
   digitalWrite(motor,1);//motor off
     //Serial.println("PUMP is off .........");
+    lcd.setCursor(0,0);
+lcd.print("BACKUP SYSTEM   ");
+lcd.setCursor(0,1);
+lcd.print("PUMP OFF        ");
+
     backup_irrigate =1;
   } 
  
