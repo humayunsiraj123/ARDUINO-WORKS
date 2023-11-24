@@ -60,6 +60,7 @@ int min_th_array [4][4] ={{220,330,320,310},
                    {220,220,320,310},};
 
 //3d array index [crop][soil][day_of_irrigation] 
+int end_event[4]={240,120,204,365};
 int event_day[4][4][15]={
                       {{15,37,51,73,97,129,185,199,212,229},
                        {27,111,150,187,199,220},
@@ -168,18 +169,22 @@ void setup() {
 
 unsigned long time;
 unsigned long daily_irrigation;
-
+bool stop;
 int prex;
 void loop() {
 //rtc days counting
 //analogWriteResolution(4);
+if(stop==0){
 
-if(((millis()-time)>3000)&&(soil_flag==1 && crop_flag==1)){
+if(((millis()-time)>500)&&(soil_flag==1 && crop_flag==1)){
   time=millis();
 Serial.println(String(days_count));
 now= rtc.now();
 curr_time=now.unixtime();
 days_count++;
+if(days_count> end_event[crop_index]){
+  stop=1;
+}
 
 }
 
@@ -428,6 +433,13 @@ lcd.print("PUMP OFF        ");
     backup_irrigate =1;
   } 
  
+ }
+ else if(stop==1){
+  lcd.setCursor(0,0);
+lcd.print("IRRIGATION       ");
+lcd.setCursor(0,1);
+lcd.print("COMPLETE        ");
+ }
 }
 
 //function for flow meter pulse counting
