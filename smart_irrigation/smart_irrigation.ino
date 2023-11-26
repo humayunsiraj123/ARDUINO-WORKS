@@ -364,11 +364,11 @@ if((mean_moist > max_th) && backup==0){
     lcd.print("PUMP OFF        ");
     daily_irrigation = days_count;
     delay(50);
-    lcd.setCursor(0,0);
-    lcd.print("CROP IRRIGATION");
-    lcd.setCursor(0,1);
-    lcd.print("DAY : ");
-    lcd.print(days_count);
+    // lcd.setCursor(0,0);
+    // lcd.print("CROP IRRIGATION");
+    // lcd.setCursor(0,1);
+    // lcd.print("DAY : ");
+    // lcd.print(days_count);
     daily_motor=0;
   }
   }
@@ -436,9 +436,9 @@ lcd.print("PUMP OFF        ");
  }
  else if(stop==1){
   lcd.setCursor(0,0);
-lcd.print("IRRIGATION       ");
+lcd.print("   IRRIGATION   ");
 lcd.setCursor(0,1);
-lcd.print("COMPLETE        ");
+lcd.print("   COMPLETE     ");
  }
 }
 
