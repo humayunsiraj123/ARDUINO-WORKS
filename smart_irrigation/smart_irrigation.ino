@@ -52,12 +52,12 @@ String crops[4]= {"wheat","rice","cotton","sugar"};
 String daysOfTheWeek[7] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 String soil[4]= {"SLS1","STLS2","SCLS3","LS004"};
 //int button_array[7] = {2,3,4,5,6,7,8};//buttons
-int max_th_array [4]={550,670,650,650};//wheat,cotton,sugar
+int max_th_array [4]={22,33,32,31};//wheat,cotton,sugar
 // soil minimum threshold array for wrt crop and soil type
-int min_th_array [4][4] ={{220,330,320,310},
-                    {220,330,320,310},
-                    {220,330,320,310},
-                   {220,220,320,310},};
+int min_th_array [4][4] ={{15,22,25,22},
+                    {14,20,24,20},
+                    {14,20,24,21},
+                   {14,20,24,20},};
 
 //3d array index [crop][soil][day_of_irrigation] 
 int end_event[4]={240,120,204,365};
@@ -171,12 +171,14 @@ unsigned long time;
 unsigned long daily_irrigation;
 bool stop;
 int prex;
+int air_val = 550;
+int water_val =440;
 void loop() {
 //rtc days counting
 //analogWriteResolution(4);
 if(stop==0){
 
-if(((millis()-time)>500)&&(soil_flag==1 && crop_flag==1)){
+if(((millis()-time)>1000)&&(soil_flag==1 && crop_flag==1)){
   time=millis();
 Serial.println(String(days_count));
 now= rtc.now();
@@ -325,8 +327,13 @@ min_th = min_th_array[crop_index][soil_index];
 
   // irrigation main system based on soil_mositure reading
 if(((days_count - daily_irrigation>1)|daily_motor==0)&&(soil_flag==1 && crop_flag==1) ){
-int moist_1 = analogRead(A0);
-int moist_2 = analogRead(A1);
+int moist_x1 = analogRead(A0);
+int moist_x2 = analogRead(A1);
+int moist_1 = map(moist_x1,air_val,water_val,0,100); 
+int moist_2 = map(moist_x2,air_val,water_val,0,100); 
+
+
+
 
 mean_moist = (moist_1 + moist_2)/2;
 //delay(100);
@@ -351,14 +358,14 @@ lcd.setCursor(0,0);
 lcd.print("DAILY IRRIGATION");
   }
 
-if((mean_moist > max_th) && backup==0){
+if((mean_moist < min_th) && backup==0){
     digitalWrite(motor,0);//motor on
   lcd.setCursor(0,1);
   lcd.print("PUMP ON          ");
   daily_motor=1;
   } 
 
-  else if((mean_moist < min_th)&& backup==0 && daily_motor==1){
+  else if((mean_moist > max_th)&& backup==0 && daily_motor==1){
     lcd.setCursor(0,1);
     digitalWrite(motor,1);//motor off
     lcd.print("PUMP OFF        ");
@@ -404,6 +411,10 @@ Serial.print("cropIndex ");
  Serial.println(min_th);
  Serial.print("moist ");
  Serial.println(mean_moist);
+//  Serial.print("M1  ");
+// Serial.println(moist_1);
+// Serial.print("M2  ");
+// Serial.println(moist_2);
  
   delay(1000);
   }
