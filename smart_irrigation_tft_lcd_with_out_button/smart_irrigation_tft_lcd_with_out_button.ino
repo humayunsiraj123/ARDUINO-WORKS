@@ -343,8 +343,6 @@ else
 tft_backup[7]=0;
 Serial.write(tft_backup,8);
 
-lcd.setCursor(0,0);
-lcd.print("DAILY IRRIGATION");
   }
 
 if((mean_moist < min_th) && backup==0){
