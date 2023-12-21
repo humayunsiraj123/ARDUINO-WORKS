@@ -140,9 +140,21 @@ RTC_DS1307 rtc;
 
  char buff[40];
 void setup() {
+  
   Serial.begin(9600);
   Wire.begin();
  // EEPROM.begin(1024);
+
+//run this code for once 
+  //eeprom for_loop
+  for( int i =0 ; i< 1024; i++){
+      eeprom.write(i,0);
+    //
+    Serial.println("DONE CLEARING EERPOM :.......................");
+    Serial.println("please comment out the eeprom for loop  and reupload the code ");
+    delay(10000);
+  }
+  
    param_config.crop_flag=0;
     param_config.soil_flag=0;
      param_config.crop_index=0;
