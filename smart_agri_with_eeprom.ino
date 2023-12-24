@@ -59,7 +59,7 @@ bool stop;
 int prex;
 
 struct configs{
-  bool config_done;
+  uint32_t config_done;
   bool crop_flag;
   bool soil_flag;
   int crop_index;
@@ -147,13 +147,13 @@ void setup() {
 
 //run this code for once 
   //eeprom for_loop
-  for( int i =0 ; i< 1024; i++){
-      eeprom.write(i,0);
-    //
-    Serial.println("DONE CLEARING EERPOM :.......................");
-    Serial.println("please comment out the eeprom for loop  and reupload the code ");
-    delay(10000);
-  }
+  // for( int i =0 ; i< 1024; i++){
+  //     EEPROM.write(i,0);
+  //   //
+  //   Serial.println("DONE CLEARING EERPOM :.......................");
+  //   Serial.println("please comment out the eeprom for loop  and reupload the code ");
+  //   delay(10000);
+  // }
   
    param_config.crop_flag=0;
     param_config.soil_flag=0;
@@ -166,46 +166,54 @@ void setup() {
     //   EEPROM.write(i,0);
     //   }
   EEPROM.get(0,param_config);
-  if(param_config.config_done==1){
+  if(param_config.config_done==0xABCD){
     Serial.print("CONFIG");
-    Serial.println(param_config.config_done);
+    Serial.println(String(param_config.config_done));
     Serial.print("c_flag");
-    Serial.println(param_config.crop_flag);
+    Serial.println(String(param_config.crop_flag));
     Serial.print("S_flag");
-    Serial.println(param_config.soil_flag);
+    Serial.println(String(param_config.soil_flag));
     Serial.print("C_index");
-    Serial.println(param_config.crop_index);
+    Serial.println(String(param_config.crop_index));
     Serial.print("soil_index");
-    Serial.println(param_config.soil_index);
-    Serial.print("soil_index");
-    Serial.println(param_config.soil_index);
-
+    Serial.println(String(param_config.soil_index));
+    
     crop_flag = param_config.crop_flag;
     soil_flag = param_config.soil_flag;
     crop_index= param_config.crop_index;
     soil_index= param_config.soil_index;
     days_count= param_config.days_count;
+
+    Serial.print("CONFIG");
+    Serial.println(String(param_config.config_done));
+    Serial.print("c_flag");
+    Serial.println(String(crop_flag));
+    Serial.print("S_flag");
+    Serial.println(String(soil_flag));
+    Serial.print("C_index");
+    Serial.println(String(crop_index));
+    Serial.print("soil_index");
+    Serial.println(String(soil_index));
+    
    
     sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
                   param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
 
   }
 
-  else if (param_config.config_done !=1)
-  {
-    Serial.print("CONFIG");
-    Serial.println(param_config.config_done);
+  else if (param_config.config_done !=0xABCD)
+  {Serial.println("NOT CONFIGURED");
+   //Serial.print("CONFIG");
+    Serial.println(String(param_config.config_done));
     Serial.print("c_flag");
-    Serial.println(param_config.crop_flag);
+    Serial.println(String(param_config.crop_flag));
     Serial.print("S_flag");
-    Serial.println(param_config.soil_flag);
+    Serial.println(String(param_config.soil_flag));
     Serial.print("C_index");
-    Serial.println(param_config.crop_index);
+    Serial.println(String(param_config.crop_index));
     Serial.print("soil_index");
-    Serial.println(param_config.soil_index);
-    Serial.print("soil_index");
-    Serial.println(param_config.soil_index);
-    Serial.println("NOT CONFIGURED");
+    Serial.println(String(param_config.soil_index));
+    
     sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
                   param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
 
@@ -425,7 +433,7 @@ if(crop_flag==0){
    //lcd.print(String(crops[crop_index]));
    }
    if(crop_flag==1 & soil_flag==1){
-    param_config.config_done=1;
+    param_config.config_done=0xABCD;
     param_config.crop_flag=1;
    param_config.soil_flag=1;
    param_config.crop_index=crop_index;
