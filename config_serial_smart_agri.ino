@@ -139,6 +139,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 RTC_DS1307 rtc;
 
  char buff[40];
+ //void(* resetFunc) (void) = 0;
 void setup() {
   
   Serial.begin(9600);
@@ -167,16 +168,16 @@ void setup() {
     //   }
   EEPROM.get(0,param_config);
   if(param_config.config_done==0xABCD){
-    Serial.print("CONFIG");
-    Serial.println(String(param_config.config_done));
-    Serial.print("c_flag");
-    Serial.println(String(param_config.crop_flag));
-    Serial.print("S_flag");
-    Serial.println(String(param_config.soil_flag));
-    Serial.print("C_index");
-    Serial.println(String(param_config.crop_index));
-    Serial.print("soil_index");
-    Serial.println(String(param_config.soil_index));
+    // Serial.print("CONFIG");
+    // Serial.println(String(param_config.config_done));
+    // Serial.print("c_flag");
+    // Serial.println(String(param_config.crop_flag));
+    // Serial.print("S_flag");
+    // Serial.println(String(param_config.soil_flag));
+    // Serial.print("C_index");
+    // Serial.println(String(param_config.crop_index));
+    // Serial.print("soil_index");
+    // Serial.println(String(param_config.soil_index));
     
     crop_flag = param_config.crop_flag;
     soil_flag = param_config.soil_flag;
@@ -184,16 +185,16 @@ void setup() {
     soil_index= param_config.soil_index;
     days_count= param_config.days_count;
 
-    Serial.print("CONFIG");
-    Serial.println(String(param_config.config_done));
-    Serial.print("c_flag");
-    Serial.println(String(crop_flag));
-    Serial.print("S_flag");
-    Serial.println(String(soil_flag));
-    Serial.print("C_index");
-    Serial.println(String(crop_index));
-    Serial.print("soil_index");
-    Serial.println(String(soil_index));
+    // Serial.print("CONFIG");
+    // Serial.println(String(param_config.config_done));
+    // Serial.print("c_flag");
+    // Serial.println(String(crop_flag));
+    // Serial.print("S_flag");
+    // Serial.println(String(soil_flag));
+    // Serial.print("C_index");
+    // Serial.println(String(crop_index));
+    // Serial.print("soil_index");
+    // Serial.println(String(soil_index));
     
    
     sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
@@ -202,17 +203,18 @@ void setup() {
   }
 
   else if (param_config.config_done !=0xABCD)
-  {Serial.println("NOT CONFIGURED");
+  {
+    //Serial.println("NOT CONFIGURED");
    //Serial.print("CONFIG");
-    Serial.println(String(param_config.config_done));
-    Serial.print("c_flag");
-    Serial.println(String(param_config.crop_flag));
-    Serial.print("S_flag");
-    Serial.println(String(param_config.soil_flag));
-    Serial.print("C_index");
-    Serial.println(String(param_config.crop_index));
-    Serial.print("soil_index");
-    Serial.println(String(param_config.soil_index));
+    // Serial.println(String(param_config.config_done));
+    // Serial.print("c_flag");
+    // Serial.println(String(param_config.crop_flag));
+    // Serial.print("S_flag");
+    // Serial.println(String(param_config.soil_flag));
+    // Serial.print("C_index");
+    // Serial.println(String(param_config.crop_index));
+    // Serial.print("soil_index");
+    // Serial.println(String(param_config.soil_index));
     
     sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
                   param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
@@ -272,6 +274,29 @@ void setup() {
 void loop() {
 //rtc days counting
 //analogWriteResolution(4);
+  b1.loop();
+  b2.loop();
+  b3.loop();
+  b4.loop();
+  b5.loop();
+  b6.loop();
+  b7.loop();
+  b8.loop();
+  b9.loop();
+
+  if(b9.isPressed()){
+   for(int i =0 ; i<EEPROM.length();i++)
+      {
+      EEPROM.write(i,0);
+      resetFunc();
+      }
+      //digitalWrite(resetpin,1);
+
+      
+
+}
+
+
 if(stop==0){
 //now=rtc.now();
 //time_curr = now.unixtime();
@@ -280,11 +305,11 @@ if(((time_curr-time_spane)>2000)&&(soil_flag==1 && crop_flag==1)){
   time_spane=  time_curr;//millis();
 Serial.print("DAY: ");
 Serial.println(String(days_count));
-DateTime now= rtc.now();
-curr_time=now.unixtime();
-delayMicroseconds(10);
-Serial.print("RTC: ");
-Serial.println(String(curr_time));
+//DateTime now= rtc.now();
+//curr_time=now.unixtime();
+//delayMicroseconds(10);
+//Serial.print("RTC: ");
+//Serial.println(String(curr_time));
 
 ++days_count;
 
@@ -311,15 +336,7 @@ if(days_count> end_event[crop_index]){
 //days_count = (curr_time - start_time)/3 ; 
 // 
  //buttons loopings 
-  b1.loop();
-  b2.loop();
-  b3.loop();
-  b4.loop();
-  b5.loop();
-  b6.loop();
-  b7.loop();
-  b8.loop();
-  b9.loop();
+
 
 // soilmoisture reading  
 
@@ -330,16 +347,7 @@ if(days_count> end_event[crop_index]){
 // Serial.println(days_count);
 // pre_day = days_count;
 // }
-if(b9.isPressed()){
-   for(int i =0 ; i<EEPROM.length();i++)
-      {
-      EEPROM.write(i,0);
-      }
-      //digitalWrite(resetpin,1);
 
-      
-
-}
 
 
 if(crop_flag==0){
@@ -450,7 +458,7 @@ if(crop_flag==0){
   }
 
 //selection threshold from soil moisture based irrigation
-max_th = max_th_array[crop_index];
+max_th = max_th_array[soil_index];
 min_th = min_th_array[crop_index][soil_index];
 
   // irrigation main system based on soil_mositure reading
