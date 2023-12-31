@@ -47,6 +47,8 @@ struct configs{
   unsigned long time_curr;
 };
 
+ void(* resetFunc) (void) = 0;//declare reset function at address 0
+
 configs param_config;
 
 //DATA arrays
@@ -116,34 +118,25 @@ unsigned char tft_backup[8]= {0x5a, 0xa5, 0x05, 0x82,0x92 , 0x00, 0x00, 0x00};
 unsigned char tft_moisture[8]= {0x5a, 0xa5, 0x05, 0x82,0x93 , 0x00, 0x00, 0x00};
 
 //lib function initialization
-RTC_DS1307 rtc;
+//RTC_DS1307 rtc;
+RTC_DS3231 rtc;
 
 
-void TimerOne_setPeriod(long OCRValue) 
 
-{
-  TCCR1B = _BV(WGM12)|_BV(CS12)|_BV(CS10);   // CTC mode - 1024 prescale
-                                             //  TCCR1B = _BV(WGM12)|_BV(CS12)|_BV(CS11)|_BV(CS10); is the entire command but since CS11=0 its left out
-                                             //  manipulates prescale (one of the parameters we can manipulate**we want to use prescales that yeields high ORC values for more reliable signals 
-  TCCR1A = _BV(COM1A0);                      //  or use TCCR1A = 0x40;            // Toggle mode 0C1A  
-                                             //  This is used to toggle on pin 11 ** pin 11 = 0 x 1 so COM(COM1A1) = 0 and is not in code
-                                             //  **Determines pin behavor
-  OCR1A = OCRValue;                          //  set the counter
-}
 unsigned long irrigate_day;
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   Wire.begin();
   // wait for Arduino Serial Monitor
-  while (!Serial) ;
- //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+ // while (!Serial) ;
+ rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
-   param_config.crop_flag=0;
-    param_config.soil_flag=0;
-     param_config.crop_index=0;
-     param_config.soil_index=0;
+   param_config.crop_flag=1;
+    param_config.soil_flag=1;
+     param_config.crop_index=1;
+     param_config.soil_index=1;
      param_config.days_count=0;
-    param_config.config_done=0;
+    param_config.config_done=0xABCD;
 
     EEPROM.get(0,param_config);
   if(param_config.config_done==0xABCD){
@@ -164,6 +157,7 @@ void setup() {
     soil_index= param_config.soil_index;
     days_count= param_config.days_count;
 
+
     Serial.print("CONFIG");
     Serial.println(String(param_config.config_done));
     Serial.print("c_flag");
@@ -176,8 +170,8 @@ void setup() {
     Serial.println(String(soil_index));
     
    
-    sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
-                  param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
+   // sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
+     //             param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
 
   }
 
@@ -194,9 +188,21 @@ void setup() {
     Serial.print("soil_index");
     Serial.println(String(param_config.soil_index));
     
-    sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
-                  param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
+    //sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
+      //            param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
 
+
+     param_config.crop_flag=1;
+    param_config.soil_flag=1;
+     param_config.crop_index=1;
+     param_config.soil_index=1;
+     param_config.days_count=0;
+    param_config.config_done=0xABCD;
+    crop_flag = param_config.crop_flag;
+    soil_flag = param_config.soil_flag;
+    crop_index= param_config.crop_index;
+    soil_index= param_config.soil_index;
+    days_count= param_config.days_count;
 
   }
 
@@ -209,8 +215,7 @@ void setup() {
   pinMode(moist_sensor[0],INPUT);
   pinMode(moist_sensor[1],INPUT);
   pinMode(motor,OUTPUT);
-  digitalWrite(motor,1);
-  TimerOne_setPeriod(781.25);
+  digitalWrite(motor,0);
   
   //interupt for water level_sensor
   attachInterrupt(digitalPinToInterrupt(level_sensor), level_sensor_call, RISING);  
@@ -259,11 +264,22 @@ void loop() {
 //rtc days counting
 //analogWriteResolution(4);
 if(stop==0){
-
-if(((millis()-time)>1000)&&(soil_flag==1 && crop_flag==1)){
-  time=millis();
-now= rtc.now();
+ DateTime now= rtc.now();
 curr_time=now.unixtime();
+//Serial.print("RTC: ");
+
+//Serial.println(curr_time);
+
+//if(((millis()-time)>1000)&&(soil_flag==1 && crop_flag==1)){
+
+if(((curr_time-time)>1000)&&(soil_flag==1 && crop_flag==1)){
+  //time=millis();
+  time =now.unixtime();
+now= rtc.now();
+//curr_time=now.unixtime();
+Serial.print("RTC: ");
+Serial.println(time);
+
 days_count++;
  param_config.days_count=days_count;
   EEPROM.put(0, param_config);
