@@ -115,6 +115,8 @@ int event_level[4][4][15]={
 unsigned char tft_days[8]= {0x5a, 0xa5, 0x05, 0x82,0x90 , 0x00, 0x00, 0x00};
 unsigned char tft_pump[8]= {0x5a, 0xa5, 0x05, 0x82,0x91 , 0x00, 0x00, 0x00};
 unsigned char tft_backup[8]= {0x5a, 0xa5, 0x05, 0x82,0x92 , 0x00, 0x00, 0x00};
+unsigned char tft_reset[8]= {0x5a, 0xa5, 0x05, 0x82,0x94 , 0x00, 0x00, 0x00};
+
 unsigned char tft_moisture[8]= {0x5a, 0xa5, 0x05, 0x82,0x93 , 0x00, 0x00, 0x00};
 
 //lib function initialization
@@ -247,9 +249,9 @@ void loop() {
     Buffer[i]= Serial1.read();
     }
     
-    if(Buffer[0]==0X5A)
+    if(Buffer[0]==0x5A)
       {
-        if(Buffer[4]==0X94){
+        if(Buffer[4]==0x94){
         //tft_crop =Buffer[8];
         
         Serial.print("ERASE CONFIG");
@@ -327,9 +329,9 @@ if(Serial1.available())
     Buffer[i]= Serial1.read();
     }
     
-    if(Buffer[0]==0X5A)
+    if(Buffer[0]==0x5A)
       {
-        if(Buffer[4]==0X55)
+        if(Buffer[4]==0x55)
         tft_crop =Buffer[8];
         Serial.print("TFT CROP");
         Serial.println(tft_crop);
@@ -384,9 +386,9 @@ if(Serial1.available())
     Buffer[i]= Serial1.read();
     }
     
-    if(Buffer[0]==0X5A)
+    if(Buffer[0]==0x5A)
       {
-        if(Buffer[4]==0X61)
+        if(Buffer[4]==0x61)
         tft_soil =Buffer[8];
         Serial.print("TFT soil");
         Serial.println(tft_soil);
