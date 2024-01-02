@@ -125,18 +125,18 @@ RTC_DS3231 rtc;
 
 unsigned long irrigate_day;
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin();
   // wait for Arduino Serial Monitor
  // while (!Serial) ;
  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
-   param_config.crop_flag=1;
-    param_config.soil_flag=1;
-     param_config.crop_index=1;
-     param_config.soil_index=1;
-     param_config.days_count=0;
-    param_config.config_done=0xABCD;
+  //  param_config.crop_flag=1;
+  //   param_config.soil_flag=1;
+  //    param_config.crop_index=1;
+  //    param_config.soil_index=1;
+  //    param_config.days_count=0;
+  //   param_config.config_done=0xABCD;
 
     EEPROM.get(0,param_config);
   if(param_config.config_done==0xABCD){
@@ -292,6 +292,11 @@ days_count++;
   
 if(days_count> end_event[crop_index]){
   stop=1;
+  for(int i =0 ; i<EEPROM.length();i++)
+      {
+      EEPROM.write(i,0);
+      resetFunc();}
+
   
   
 }
