@@ -256,7 +256,9 @@ void loop() {
          for(int i =0 ; i<EEPROM.length();i++)
       {
       EEPROM.write(i,0);
-      resetFunc();}}
+      }
+      resetFunc();
+      }
         }
         }
       delay(50);
@@ -294,8 +296,8 @@ if(days_count> end_event[crop_index]){
   stop=1;
   for(int i =0 ; i<EEPROM.length();i++)
       {
-      EEPROM.write(i,0);
-      resetFunc();}
+      EEPROM.write(i,0);}
+      resetFunc();
 
   
   
