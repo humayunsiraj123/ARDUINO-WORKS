@@ -116,6 +116,7 @@ unsigned char tft_days[8]= {0x5a, 0xa5, 0x05, 0x82,0x90 , 0x00, 0x00, 0x00};
 unsigned char tft_pump[8]= {0x5a, 0xa5, 0x05, 0x82,0x91 , 0x00, 0x00, 0x00};
 unsigned char tft_backup[8]= {0x5a, 0xa5, 0x05, 0x82,0x92 , 0x00, 0x00, 0x00};
 unsigned char tft_reset[8]= {0x5a, 0xa5, 0x05, 0x82,0x94 , 0x00, 0x00, 0x00};
+unsigned char tft_done[8]= {0x5a, 0xa5, 0x05, 0x82,0x95 , 0x00, 0x00, 0x00};
 
 unsigned char tft_moisture[8]= {0x5a, 0xa5, 0x05, 0x82,0x93 , 0x00, 0x00, 0x00};
 
@@ -132,7 +133,7 @@ void setup() {
   Wire.begin();
   // wait for Arduino Serial Monitor
  // while (!Serial) ;
- rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+// rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
    // param_config.crop_flag=1;
    //  param_config.soil_flag=1;
@@ -180,32 +181,32 @@ void setup() {
 
   else if (param_config.config_done !=0xABCD)
   {Serial.println("NOT CONFIGURED");
-   //Serial.print("CONFIG");
-    Serial.println(String(param_config.config_done));
-    Serial.print("c_flag");
-    Serial.println(String(param_config.crop_flag));
-    Serial.print("S_flag");
-    Serial.println(String(param_config.soil_flag));
-    Serial.print("C_index");
-    Serial.println(String(param_config.crop_index));
-    Serial.print("soil_index");
-    Serial.println(String(param_config.soil_index));
+   // //Serial.print("CONFIG");
+   //  Serial.println(String(param_config.config_done));
+   //  Serial.print("c_flag");
+   //  Serial.println(String(param_config.crop_flag));
+   //  Serial.print("S_flag");
+   //  Serial.println(String(param_config.soil_flag));
+   //  Serial.print("C_index");
+   //  Serial.println(String(param_config.crop_index));
+   //  Serial.print("soil_index");
+   //  Serial.println(String(param_config.soil_index));
     
     //sprintf(buff,"config_done %b /n crop_flag %b /n soil_flag %b /n crop_index %d /n soil_index %d  /n Days_elapsed",
       //            param_config.config_done,param_config.crop_flag,param_config.soil_flag,param_config.crop_index,param_config.soil_index,param_config.days_count);
 
 
-     param_config.crop_flag=1;
-    param_config.soil_flag=1;
-     param_config.crop_index=1;
-     param_config.soil_index=1;
-     param_config.days_count=0;
-    param_config.config_done=0xABCD;
-    crop_flag = param_config.crop_flag;
-    soil_flag = param_config.soil_flag;
-    crop_index= param_config.crop_index;
-    soil_index= param_config.soil_index;
-    days_count= param_config.days_count;
+    //  param_config.crop_flag=;
+    // param_config.soil_flag=1;
+    //  param_config.crop_index=1;
+    //  param_config.soil_index=1;
+    //  param_config.days_count=0;
+    // param_config.config_done=0xABCD;
+    // crop_flag = param_config.crop_flag;
+    // soil_flag = param_config.soil_flag;
+    // crop_index= param_config.crop_index;
+    // soil_index= param_config.soil_index;
+    // days_count= param_config.days_count;
 
   }
 
@@ -218,7 +219,7 @@ void setup() {
   pinMode(moist_sensor[0],INPUT);
   pinMode(moist_sensor[1],INPUT);
   pinMode(motor,OUTPUT);
-  digitalWrite(motor,0);
+  digitalWrite(motor,1);
   
   //interupt for water level_sensor
   attachInterrupt(digitalPinToInterrupt(level_sensor), level_sensor_call, RISING);  
@@ -298,7 +299,10 @@ if(days_count> end_event[crop_index]){
   for(int i =0 ; i<EEPROM.length();i++)
       {
       EEPROM.write(i,0);}
-      resetFunc();
+      //resetFunc();
+  tft_done[7] = 1 ; 
+    Serial1.write(tft_done,8);
+  delay(2000);
   
   
 }
@@ -487,7 +491,7 @@ Serial1.write(tft_backup,8);
   }
 
 if((mean_moist < min_th) && backup==0){
-    digitalWrite(motor,1);//motor on
+    digitalWrite(motor,0);//motor on
   daily_motor=1;
   tft_pump[7]=1;
   Serial1.write(tft_pump,8);
@@ -497,7 +501,7 @@ if((mean_moist < min_th) && backup==0){
   } 
 
   else if((mean_moist > max_th)&& backup==0 && daily_motor==1){
-    digitalWrite(motor,0);//motor off
+    digitalWrite(motor,1);//motor off
     daily_irrigation = days_count;
     tft_pump[7]=0;
     Serial1.write(tft_pump,8);
