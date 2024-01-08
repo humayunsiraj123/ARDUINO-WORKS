@@ -128,7 +128,7 @@ RTC_DS3231 rtc;
 
 unsigned long irrigate_day;
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial1.begin(115200);
   Wire.begin();
   // wait for Arduino Serial Monitor
@@ -245,9 +245,14 @@ void loop() {
 
   if(Serial1.available())
   {
+    Serial.print(" THE RECIVED BYTE : ")
     for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
     {
-    Buffer[i]= Serial1.read();
+    Buffer[i]= Serial1.read(); 
+    }
+for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
+    {
+      Serial.print(Buffer[i],HEX);
     }
     
     if(Buffer[0]==0x5A)
@@ -274,11 +279,11 @@ curr_time=now.unixtime();
 
 //Serial.println(curr_time);
 
-//if(((millis()-time)>1000)&&(soil_flag==1 && crop_flag==1)){
+if(((millis()-time)>2000)&&(soil_flag==1 && crop_flag==1)){
 
-if(((curr_time-time)>1000)&&(soil_flag==1 && crop_flag==1)){
+//if(((curr_time-time)>12000)&&(soil_flag==1 && crop_flag==1)){
   //time=millis();
-  time =now.unixtime();
+time =now.unixtime();
 now= rtc.now();
 //curr_time=now.unixtime();
 Serial.print("RTC: ");
@@ -291,7 +296,7 @@ days_count++;
   tft_days[6]=highByte(days_count);
   tft_days[7]=lowByte(days_count);
   Serial1.write(tft_days,8);
-
+  delay(50);
   
   
 if(days_count> end_event[crop_index]){
@@ -330,23 +335,23 @@ if(days_count> end_event[crop_index]){
 
 if(crop_flag==0){
 
-if(Serial1.available())
-  {
-    for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
-    {
-    Buffer[i]= Serial1.read();
-    }
+// if(Serial1.available())
+//   {
+//     for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
+//     {
+//     Buffer[i]= Serial1.read();
+//     }}
     
     if(Buffer[0]==0x5A)
       {
         if(Buffer[4]==0x55)
         tft_crop =Buffer[8];
-        Serial.print("TFT CROP");
+        Serial.print("TFT CROP : ");
         Serial.println(tft_crop);
-        
+        delay(50);
         }
-      delay(50);
-      }
+      
+      
        
 
   //crop selection
@@ -387,18 +392,18 @@ if(Serial1.available())
   //selection of soilt type only after crops crop selection  
  if (crop_flag==1 && soil_flag ==0){
 
-if(Serial1.available())
-  {
-    for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
-    {
-    Buffer[i]= Serial1.read();
-    }
+// if(Serial1.available())
+//   {
+//     for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
+//     {
+//     Buffer[i]= Serial1.read();
+//     }}
     
     if(Buffer[0]==0x5A)
       {
         if(Buffer[4]==0x61)
         tft_soil =Buffer[8];
-        Serial.print("TFT soil");
+        Serial.print("TFT soil: ");
         Serial.println(tft_soil);
         
         }
@@ -487,9 +492,9 @@ else
 {backup=0;
 tft_backup[7]=0;
 Serial1.write(tft_backup,8);
-
   }
 
+  
 if((mean_moist < min_th) && backup==0){
     digitalWrite(motor,0);//motor on
   daily_motor=1;
@@ -508,7 +513,7 @@ if((mean_moist < min_th) && backup==0){
 //    tft_moisture[7]=1;
 //    Serial.write(tft_moisture,8);
   
-    delay(50);
+//    delay(50);
     // lcd.setCursor(0,0);
     // lcd.print("CROP IRRIGATION");
     // lcd.setCursor(0,1);
@@ -532,6 +537,77 @@ water_level_th = event_level[crop_index][soil_index][day_index] ;
 if((soil_flag==1 && crop_flag==1) &&(days_count-prex>2 )){
 prex=days_count;
 
+if((mean_moist < min_th) && backup==0){
+    //digitalWrite(motor,0);//motor on
+  //daily_motor=1;
+  tft_pump[7]=1;
+  Serial1.write(tft_pump,8);
+ delay(50);
+  // tft_moisture[7]=0;
+ // Serial.write(tft_moisture,8);
+  
+  } 
+
+  else if((mean_moist > max_th)&& backup==0 && daily_motor==1){
+    //digitalWrite(motor,1);//motor off
+    //daily_irrigation = days_count;
+    tft_pump[7]=0;
+    Serial1.write(tft_pump,8);
+    delay(50);
+//    tft_moisture[7]=1;
+//    Serial.write(tft_moisture,8);
+  
+//    delay(50);
+    // lcd.setCursor(0,0);
+    // lcd.print("CROP IRRIGATION");
+    // lcd.setCursor(0,1);
+    // lcd.print("DAY : ");
+    // lcd.print(days_count);
+   // daily_motor=0;
+  }
+
+if(volume<water_level_th && backup==1 &&  backup_irrigate==1)
+{
+//digitalWrite(motor,0);//motor on
+  tft_pump[7]=1;
+  Serial1.write(tft_pump,8);
+//  tft_moisture[7]=0;
+//  Serial.write(tft_moisture,8);
+delay(50); 
+}
+
+else if(volume>water_level_th && backup==1)
+{
+  //digitalWrite(motor,1);//motor off
+    //Serial.println("PUMP is off .........");
+  tft_pump[7]=0;
+  Serial1.write(tft_pump,8);
+ delay(50);
+  // tft_moisture[7]=1;
+ // Serial.write(tft_moisture,8);
+   // backup_irrigate =1;
+  } 
+
+
+  if((mean_moist>70 | mean_moist<5 ))
+{
+ // backup=1;
+  tft_backup[7]=1;
+  Serial1.write(tft_backup,8);
+delay(50);
+// lcd.setCursor(0,0);
+// lcd.print("ALERT BACKUP    ");
+// lcd.setCursor(0,1);
+// lcd.print("     SYSTEM     ");
+  
+  }
+
+else 
+{
+//backup=0;
+tft_backup[7]=0;
+Serial1.write(tft_backup,8);
+  }
 //Serial.print("Next irrigation on ");
 //Serial.println(event_day[crop_index][soil_index][day_index]);
 //Serial.print("water_level_th ");
@@ -565,8 +641,8 @@ volume = (2.66*pulse);/////2.66 calibration factor and div by 1000 for mmm
 if(volume<water_level_th && backup==1 &&  backup_irrigate==1)
 {
 digitalWrite(motor,0);//motor on
-  tft_pump[7]=1;
-  Serial1.write(tft_pump,8);
+ // tft_pump[7]=1;
+ // Serial1.write(tft_pump,8);
 //  tft_moisture[7]=0;
 //  Serial.write(tft_moisture,8);
   }
@@ -575,8 +651,8 @@ else if(volume>water_level_th && backup==1)
 {
   digitalWrite(motor,1);//motor off
     //Serial.println("PUMP is off .........");
-tft_pump[7]=0;
-  Serial1.write(tft_pump,8);
+//tft_pump[7]=0;
+ // Serial1.write(tft_pump,8);
  // tft_moisture[7]=1;
  // Serial.write(tft_moisture,8);
     backup_irrigate =1;
