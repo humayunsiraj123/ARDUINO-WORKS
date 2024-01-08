@@ -9,7 +9,6 @@
 const int level_sensor =2;
 const int motor = 12;
 const int led= 13;
-
 //aux variable
 String crop_type;
 String soil_type;
@@ -46,7 +45,18 @@ struct configs{
   int days_count;
   unsigned long time_curr;
 };
+unsigned long time;
+unsigned long daily_irrigation;
+bool stop;
+int prex;
+int air_val = 550;
+int water_val =440;
+int moist_1 ; 
+int moist_2 ; 
 
+int tft_crop;
+int tft_soil;
+void level_sensor_call();
  void(* resetFunc) (void) = 0;//declare reset function at address 0
 
 configs param_config;
@@ -230,23 +240,13 @@ void setup() {
   delay(1000);
 }
 
-unsigned long time;
-unsigned long daily_irrigation;
-bool stop;
-int prex;
-int air_val = 550;
-int water_val =440;
-int moist_1 ; 
-int moist_2 ; 
 
-int tft_crop;
-int tft_soil;
 void loop() {
 
   if(Serial1.available())
   {
-    Serial.print(" THE RECIVED BYTE : ")
-    for(int i=0;i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
+    Serial.print(" THE RECIVED BYTE : ");
+    for(int i=0; i<=8;i++)   //TO store whole frame in buffer array. 0X5A A5 06 83 55 00 01 00 01 For ON
     {
     Buffer[i]= Serial1.read(); 
     }
@@ -408,7 +408,7 @@ if(crop_flag==0){
         
         }
       delay(50);
-      }
+      
 
   
   if((tft_soil==1)){
@@ -478,8 +478,8 @@ mean_moist = (moist_1 + moist_2)/2;
 if((mean_moist>70 | mean_moist<5 ))
 {
   backup=1;
-  tft_backup[7]=1;
-  Serial1.write(tft_backup,8);
+  //tft_backup[7]=1;
+  //Serial1.write(tft_backup,8);
 
 // lcd.setCursor(0,0);
 // lcd.print("ALERT BACKUP    ");
@@ -490,16 +490,16 @@ if((mean_moist>70 | mean_moist<5 ))
 
 else 
 {backup=0;
-tft_backup[7]=0;
-Serial1.write(tft_backup,8);
+//tft_backup[7]=0;
+//Serial1.write(tft_backup,8);
   }
 
   
 if((mean_moist < min_th) && backup==0){
     digitalWrite(motor,0);//motor on
   daily_motor=1;
-  tft_pump[7]=1;
-  Serial1.write(tft_pump,8);
+  //tft_pump[7]=1;
+  //Serial1.write(tft_pump,8);
  // tft_moisture[7]=0;
  // Serial.write(tft_moisture,8);
   
@@ -508,8 +508,8 @@ if((mean_moist < min_th) && backup==0){
   else if((mean_moist > max_th)&& backup==0 && daily_motor==1){
     digitalWrite(motor,1);//motor off
     daily_irrigation = days_count;
-    tft_pump[7]=0;
-    Serial1.write(tft_pump,8);
+    //tft_pump[7]=0;
+    //Serial1.write(tft_pump,8);
 //    tft_moisture[7]=1;
 //    Serial.write(tft_moisture,8);
   
