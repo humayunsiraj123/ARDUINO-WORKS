@@ -434,7 +434,7 @@ days_count++;
   
   tft_days[6]=highByte(days_count);
   tft_days[7]=lowByte(days_count);
-  Serial.write(tft_days,8);
+  Serial1.write(tft_days,8);
 
   
   
@@ -679,7 +679,7 @@ sent_0=sent_1;
  if(volume<water_level_th && backup==1 &&  backup_irrigate==1)
  {
  tft_pump[7]=1;
- Serial.write(tft_pump,8);
+ Serial1.write(tft_pump,8);
  delay(50);
  }
 
@@ -687,25 +687,25 @@ sent_0=sent_1;
  {
    
  tft_pump[7]=0;
- Serial.write(tft_pump,8);
+ Serial1.write(tft_pump,8);
  delay(50);
  } 
 
  if((mean_moist < min_th) && backup==0){
  tft_pump[7]=1;
- Serial.write(tft_pump,8);
+ Serial1.write(tft_pump,8);
  delay(50);  
  } 
 
  else if((mean_moist > max_th)&& backup==0 && daily_motor==1){
    tft_pump[7]=0;
-   Serial.write(tft_pump,8);
+   Serial1.write(tft_pump,8);
   
    delay(50);
  }
 
  tft_backup[7]=backup;
-   Serial.write(tft_backup,8);
+   Serial1.write(tft_backup,8);
    delay(50);
 
 
