@@ -12,6 +12,7 @@ byte byte_7;
 byte byte_8;
 
 uint32_t rpm_id = 0x1E001000;
+uint32_t tx_rpm_id=0x00000280;
 uint32_t oil_id = 0x1E025000;
 int rpm ; 
 uint8_t rxBuf[8];
@@ -43,7 +44,7 @@ uint8_t txBuf1[8] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 MCP_CAN CAN0(10);     // Set CS to pin 10
 
 
-union rx_data { // overlay CAN payload with Long intgeger
+union data_u { // overlay CAN payload with Long intgeger
 unsigned char data_array[4]; // 8 byte payload area to the CAN BUS
 unsigned long int data;
 };
@@ -79,41 +80,45 @@ void loop() {
 
   if (!digitalRead(CAN0_INT))                        // If CAN0_INT pin is low, read receive buffer
   {
+  
     CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
+    union data_u rx_data;
+    rxId = rx_Id & 0x7FFFF000; 
+    
     for (byte i = 0; i < len; i++) {
       Serial.print(rxBuf[i], HEX);
       Serial.print(" ");
     }
-    //Serial.print("\n");
-    //Serial.print(rxId);
-    byte c=0;
-    byte_1=rxBuf[c];
-    byte_2=rxBuf[c+1];
-    byte_3=rxBuf[c+2];
-    byte_4=rxBuf[c+3];
-    byte_5=rxBuf[c+4];
-    byte_6=rxBuf[c+5];
-    byte_7=rxBuf[c+6];
-    byte_8=rxBuf[c+7];
-    if(rxId == rpm_id){                 //from data id 0x90
-      Vt_data=(byte_1 << 8) | byte_2;
-      Vt=float(Vt_data)*0.10;
-      Serial.print("\nTotal Voltage : ");
-      Serial.print(Vt);
-      Serial.print(" v");
-      
-      Current=(byte_5 << 8) | byte_6;
-      Current=Current-30000;
-      Serial.print("\nCurrent : ");
-      Serial.print(Current);
-      Serial.print(" A");
+    
+    switch ( rxId ) {
+    case rmp_id :
+    rx_data.data_array[0] = rxBuf[7];
+    rx_data.data_array[1] = rxBuf[6];
+    rx_data.data_array[2] = rxBuf[5];
+    rx_data.data_array[3] = rxBuf[4];
+    rpm = (int)(rx_data.data/256);
+    Serial.print("RPM  = ");
+    Serial.println(rpm); 
+    tx_Buf[0]=0x00;
+    tx_Buf[1]=0x00;
+    tx_Buf[2]= (unsigned char)((rpm *4) & 0x00FF);//low byte
+    tx_Buf[3]=(unsigned char)((rpm *4) /256);//high byte
+    tx_Buf[4]=0x00;
+    tx_Buf[5]=0x00;
+    tx_Buf[6]=0x00;
+    tx_Buf[7]=0x00;
+    
+    byte sndStat = CAN0.sendMsgBuf(tx_rpm_id, 1, 8, txBuf);
+ if (sndStat == CAN_OK) {
+    Serial.print("Tx ID: ");
+    Serial.println(rpm_id, HEX);
+  }
+    
+   break;
+    default: // debug printing to serial
+return;
+break;
 
-      SOC_data=(byte_7 <<8) | byte_8;
-      SOC=float(SOC_data)*0.1;
-      Serial.print("\nSOC : ");
-      Serial.print(SOC);
-      Serial.print("%");
-    }
-
-
+  }
+}
 }
