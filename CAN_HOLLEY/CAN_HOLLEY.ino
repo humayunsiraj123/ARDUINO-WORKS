@@ -13,13 +13,17 @@ byte byte_8;
 
 uint32_t rpm_id = 0x1E001000;
 uint32_t tx_rpm_id=0x00000280;
+uint32_t tx_oil_id=0x000004E0;
+//uint32_t tx_rpm_id=0x00000280;
+
 uint32_t oil_id = 0x1E025000;
 int rpm ; 
+float oil_psi;
 uint8_t rxBuf[8];
 uint8_t txBuf[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint8_t DataIDs[9] = {0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98};
 uint8_t txBuf1[8] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
+//
 //index Description Units CAN data bytes CAN ID (hex)
 //0 RTC (1/1000 sec since power on) xx:xx:xx.xx time [0..3] 1E001000
 //0 RPM xx,xxx RPM [4..7] 1E001000
@@ -114,6 +118,27 @@ void loop() {
     Serial.println(rpm_id, HEX);
   }
     
+   break;
+    case oil_id:
+    
+    rx_data.data_array[0] = rxBuf[3];
+    rx_data.data_array[1] = rxBuf[2];
+    rx_data.data_array[2] = rxBuf[1];
+    rx_data.data_array[3] = rxBuf[0];
+    oil_psi = (float)(rx_data.data/256.0);
+    Serial.print("Oil pressure = ");
+    Serial.println(oil_psi);
+
+     tx_Buf[0]=0x00;
+    tx_Buf[1]=0x00;
+    tx_Buf[2]= (unsigned char)((rpm *4) & 0x00FF);//low byte
+    tx_Buf[3]=(unsigned char)((rpm *4) /256);//high byte
+    tx_Buf[4]=0x00;
+    tx_Buf[5]=0x00;
+    tx_Buf[6]=0x00;
+    tx_Buf[7]=0x00;
+    
+
    break;
     default: // debug printing to serial
 return;
