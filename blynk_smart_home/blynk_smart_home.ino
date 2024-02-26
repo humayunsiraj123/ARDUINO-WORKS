@@ -9,6 +9,13 @@
 #include <BlynkSimpleEsp32.h>
 #include <ESP32Servo.h>
 #include <DHT.h>
+#include <ESP_FlexyStepper.h>
+
+// IO pin assignments
+const int MOTOR_STEP_PIN = 4;
+const int MOTOR_DIRECTION_PIN = 2;
+ESP_FlexyStepper stepper;
+
 Servo servo;
 char auth[] = BLYNK_AUTH_TOKEN;
 
@@ -21,6 +28,17 @@ BlynkTimer timer;
 #define relay1_pin 13
 #define servo_pin 18
 #define DHTPIN 19
+#define fan 21
+#define light 22
+
+byte directionPin = 8;
+byte stepPin = 9;
+int numberOfSteps = 200;
+byte ledPin = 13;
+int pulseWidthMicros = 20;  // microsecondo
+int millisbetweenSteps = 10; // milliseconds - or try 100 for slower steps
+int statostart;
+
 int relay1_state = 0;
 
 #define button1_vpin    V1
@@ -43,13 +61,23 @@ BLYNK_WRITE(button1_vpin)
 //cntrl shed servo
 BLYNK_WRITE(V2){
   int Degree = param.asInt();
+  Serial.print("SERVO WRITE:");
+  Serial.println(Degree);
   servo.write(Degree);
 }
 
 //to get the disarm/arm of security system use var sec_cntrl 
 BLYNK_WRITE(V4) {
   sec_cntrl= param.asInt();
+  Serial.print("SEC_CNTRL: ");
   Serial.println(sec_cntrl);
+}
+BLYNK_WRITE(V3) {
+  int steps= param.asInt();
+  Serial.print("steps");
+  Serial.println(steps);
+stepper.moveRelativeInSteps(steps);
+
 }
 
 float h;
@@ -78,12 +106,17 @@ void setup()
   pinMode(button1_pin, INPUT_PULLUP);
   dht.begin();
  servo.attach(servo_pin);
+ stepper.connectToPins(MOTOR_STEP_PIN, MOTOR_DIRECTION_PIN);
   pinMode(relay1_pin, OUTPUT);
-  
+  stepper.setSpeedInStepsPerSecond(100);
+  stepper.setAccelerationInStepsPerSecondPerSecond(100);
   digitalWrite(relay1_pin, HIGH);
   
   Blynk.begin(auth, ssid, pass);
   timer.setInterval(1000L, DHT11sensor);
+  //timer.setInterval(1000L, DHT11sensor);
+  
+  
 
 }
 
